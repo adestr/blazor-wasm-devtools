@@ -52,6 +52,8 @@ Events are buffered in .NET and forwarded to the extension hook as `lifecycle` e
 
 ## Build and test
 
+Tests use **xUnit** as the runner, with **bUnit** for Blazor component tests, **NSubstitute** for JS/DI mocks, and **AutoFixture** where sample data helps.
+
 ```bash
 cd instrumentation
 dotnet test
