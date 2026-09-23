@@ -22,6 +22,8 @@
       const parts = [
         state.hasBlazor ? "Blazor detected" : "Blazor not detected",
         state.isActive ? "DevTools active" : "DevTools dormant",
+        state.rendererCount + " renderer(s)",
+        state.lifecycleEventCount + " lifecycle event(s)",
       ];
       setStatus(parts.join(" · "));
     });

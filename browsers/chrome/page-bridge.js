@@ -28,7 +28,15 @@ function queryPageState(callback) {
         hasHook: !!hook,
         isActive: !!(hook && hook.isActive),
         isDormant: hook ? hook.isDormant : null,
-        hasBlazor: typeof Blazor !== "undefined"
+        hasBlazor: typeof Blazor !== "undefined",
+        lifecycleEventCount: (function () {
+          var hook = window.__BLAZOR_WASM_DEVTOOLS_GLOBAL_HOOK__;
+          return hook && hook.lifecycleBuffer ? hook.lifecycleBuffer.length : 0;
+        })(),
+        rendererCount: (function () {
+          var hook = window.__BLAZOR_WASM_DEVTOOLS_GLOBAL_HOOK__;
+          return hook && hook.renderers ? hook.renderers.size : 0;
+        })()
       });
     })();`,
     (result, exceptionInfo) => {

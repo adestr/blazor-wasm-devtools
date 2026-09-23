@@ -11,3 +11,7 @@ These tools work on the same principle as many other UI framework developer tool
 | `panel.html` / `panel.js` | Custom DevTools panel UI | Activate hook and show status |
 
 After loading the unpacked extension, **reload** any open tabs so `inject.js` runs. Open the **Blazor WASM** panel and use **Initialize DevTools** (or switch to the panel tab) to call `hook.activate()`. In the page console you should see `window.__BLAZOR_WASM_DEVTOOLS_GLOBAL_HOOK__` and `typeof Blazor !== 'undefined'` on Blazor apps.
+
+## NuGet instrumentation
+
+See [instrumentation/README.md](instrumentation/README.md) for the `BlazorWasmDevTools` package (`builder.AddBlazorWasmDevTools()`), which listens for `hook.on("activate")`, registers a `blazor-wasm` renderer, and streams component lifecycle events to the extension.

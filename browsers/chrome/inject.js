@@ -11,10 +11,13 @@
 
   const listeners = new Map();
 
+  const lifecycleBuffer = [];
+
   const hook = {
     isDormant: true,
     isActive: false,
     renderers: new Map(),
+    lifecycleBuffer,
 
     activate() {
       this.isDormant = false;
@@ -34,6 +37,13 @@
     },
 
     emit(event, payload) {
+      if (event === "lifecycle" && payload) {
+        lifecycleBuffer.push(payload);
+        if (lifecycleBuffer.length > 500) {
+          lifecycleBuffer.splice(0, lifecycleBuffer.length - 500);
+        }
+      }
+
       const set = listeners.get(event);
       if (!set) {
         return;
