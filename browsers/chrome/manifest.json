@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Blazor WASM DevTools",
+  "description": "A set of developer tools for inspection of Blazor WebAssembly applications.",
+  "version": "0.0.1",
+  "devtools_page": "devtools.html",
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["inject.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}
