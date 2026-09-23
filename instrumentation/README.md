@@ -50,11 +50,12 @@ Derive from `DevToolsComponentBase` when you need finer-grained phases than rend
 
 Events are buffered in .NET and forwarded to the extension hook as `lifecycle` events after activation.
 
-## Build package
+## Build and test
 
 ```bash
-cd instrumentation/BlazorWasmDevTools
-dotnet pack -c Release
+cd instrumentation
+dotnet test
+dotnet pack BlazorWasmDevTools/BlazorWasmDevTools.csproj -c Release
 ```
 
-The `.nupkg` is written to `bin/Release/`.
+The `.nupkg` is written to `BlazorWasmDevTools/bin/Release/`.
