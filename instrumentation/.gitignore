@@ -1,2 +1,39 @@
-bin/
-obj/
+# Build output (.NET SDK)
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Rr]eleases/
+artifacts/
+publish/
+
+# NuGet packages produced locally
+*.nupkg
+*.snupkg
+
+# Test and coverage
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and legacy project files
+*.log
+project.lock.json
+project.fragment.lock.json
