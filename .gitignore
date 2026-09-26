@@ -21,7 +21,6 @@ dist-ssr
 *.tsbuildinfo
 
 # Editor directories and files.
-# *.sln is intentionally not ignored: instrumentation/BlazorWasmDevTools.sln is source.
 .vscode/*
 !.vscode/extensions.json
 .idea
