@@ -31,5 +31,5 @@ echo "Packing BlazorWasmDevTools ${package_version}"
 
 cd instrumentation
 dotnet test
-# GeneratePackageOnBuild skips the build during pack, so force a Release build here.
+# GeneratePackageOnBuild is enabled in the project; disable it here to avoid producing a second package during pack's build step.
 dotnet pack BlazorWasmDevTools/BlazorWasmDevTools.csproj -c Release -p:Version="${package_version}" -p:GeneratePackageOnBuild=false
