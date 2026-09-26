@@ -54,10 +54,12 @@ Events are buffered in .NET and forwarded to the extension hook as `lifecycle` e
 
 Tests use **xUnit** as the runner, with **bUnit** for Blazor component tests, **NSubstitute** for JS/DI mocks, and **AutoFixture** where sample data helps.
 
+The package and tests multi-target **.NET 8**, **.NET 9**, and **.NET 10**.
+
 ```bash
 cd instrumentation
 dotnet test
 dotnet pack BlazorWasmDevTools/BlazorWasmDevTools.csproj -c Release
 ```
 
-The `.nupkg` is written to `BlazorWasmDevTools/bin/Release/`.
+The `.nupkg` is written to `BlazorWasmDevTools/bin/Release/` and includes `lib/net8.0`, `lib/net9.0`, and `lib/net10.0`.
