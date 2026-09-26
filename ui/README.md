@@ -22,7 +22,7 @@ pnpm build
 
 | Build step | Output |
 |------------|--------|
-| `build:bridge` | `browsers/chrome/page-bridge.js` (shared with `devtools.html`) |
-| `build:panel` | `browsers/chrome/panel/` (`index.html` + assets) |
+| `build:bridge` | `browsers/chrome/page-bridge.js` (shared with `devtools.html`, gitignored) |
+| `build:panel` | `browsers/chrome/panel/` (`index.html` + assets, gitignored) |
 
 Load the unpacked extension from `browsers/chrome` after running `pnpm build`.
