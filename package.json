@@ -1,0 +1,9 @@
+{
+  "name": "blazor-wasm-devtools",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --dir ui dev",
+    "build": "pnpm --dir ui build",
+    "lint": "pnpm --dir ui lint"
+  }
+}

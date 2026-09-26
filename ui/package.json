@@ -1,27 +1,29 @@
 {
-  "name": "blazor-wasm-devtools",
-  "version": "0.1.0",
+  "name": "blazor-wasm-devtools-panel",
   "private": true,
+  "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "vite",
+    "build": "pnpm run build:bridge && pnpm run build:panel",
+    "build:panel": "vite build",
+    "build:bridge": "vite build --config vite.bridge.config.ts",
+    "lint": "tsc --noEmit",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "next": "16.3.5",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.5",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/chrome": "^0.1.24",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.0.4",
+    "tailwindcss": "^4.1.13",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7"
   },
   "packageManager": "pnpm@12.4.1"
 }

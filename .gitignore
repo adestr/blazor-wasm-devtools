@@ -20,7 +20,8 @@ dist-ssr
 # TypeScript
 *.tsbuildinfo
 
-# Editor directories and files
+# Editor directories and files.
+# *.sln is intentionally not ignored: instrumentation/BlazorWasmDevTools.sln is source.
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -28,5 +29,7 @@ dist-ssr
 *.suo
 *.ntvs*
 *.njsproj
-*.sln
 *.sw?
+
+# Chrome extension panel built from ui/ (vite outDir).
+/browsers/chrome/panel/
