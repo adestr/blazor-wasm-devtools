@@ -31,5 +31,6 @@ dist-ssr
 *.njsproj
 *.sw?
 
-# Chrome extension panel built from ui/ (vite outDir).
+# Chrome extension artifacts built from ui/.
 /browsers/chrome/panel/
+/browsers/chrome/page-bridge.js
