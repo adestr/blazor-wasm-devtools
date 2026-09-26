@@ -56,10 +56,12 @@ Tests use **xUnit** as the runner, with **bUnit** for Blazor component tests, **
 
 The package and tests multi-target **.NET 8**, **.NET 9**, and **.NET 10**.
 
+From the repo root:
+
 ```bash
-cd instrumentation
-dotnet test
-dotnet pack BlazorWasmDevTools/BlazorWasmDevTools.csproj -c Release
+./package.sh
 ```
+
+That runs the tests, then packs a Release build. The package version is the two-part `<Version>` from the project file plus the commit count on `main` (`git rev-list --count main`). Building on any branch other than `main` prints a warning.
 
 The `.nupkg` is written to `BlazorWasmDevTools/bin/Release/` and includes `lib/net8.0`, `lib/net9.0`, and `lib/net10.0`.

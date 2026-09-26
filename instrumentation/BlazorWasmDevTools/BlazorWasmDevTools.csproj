@@ -7,7 +7,7 @@
     <RootNamespace>BlazorWasmDevTools</RootNamespace>
     <AssemblyName>BlazorWasmDevTools</AssemblyName>
     <PackageId>BlazorWasmDevTools</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1</Version>
     <Authors>Blazor WASM DevTools</Authors>
     <Description>Instrumentation package for Blazor WebAssembly apps using the Blazor WASM DevTools browser extension.</Description>
     <PackageTags>blazor;webassembly;devtools</PackageTags>
