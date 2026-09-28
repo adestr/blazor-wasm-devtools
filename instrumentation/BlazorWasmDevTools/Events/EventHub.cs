@@ -1,16 +1,18 @@
 using BlazorWasmDevTools.Models;
+using Microsoft.Extensions.Logging;
 
-namespace BlazorWasmDevTools.Lifecycle;
+namespace BlazorWasmDevTools.Events;
 
-public sealed class ComponentLifecycleHub : IComponentLifecycleSink
+public sealed class EventHub(ILogger<EventHub> logger) : IEventSource, IEventSink
 {
     private const int MaxRecentEvents = 500;
 
     private readonly Dictionary<int, ComponentDescriptor> _components = new();
     private readonly object _recentLock = new();
     private readonly List<ComponentLifecycleEvent> _recentEvents = [];
+    private readonly ILogger<EventHub> _logger = logger;
 
-    private long _sequence;
+    // private long _sequence;
     private volatile bool _isActive;
 
     public event Action<ComponentLifecycleEvent>? LifecyclePublished;
@@ -20,6 +22,19 @@ public sealed class ComponentLifecycleHub : IComponentLifecycleSink
     public void SetActive(bool active)
     {
         _isActive = active;
+    }
+
+    public void Publish<TEvent>(TEvent @event)
+        where TEvent : IBlazorEvent
+    {
+        if (@event is ComponentLifecycleEvent lifecycleEvent)
+        {
+            Publish(lifecycleEvent);
+        }
+
+        _logger.LogInformation("Publishing event of type {EventType}", typeof(TEvent).Name);
+        // TODO: Implement publishing logic for generic events.
+        _logger.LogError("Publishing of event type {EventType} is not implemented", typeof(TEvent).Name);
     }
 
     public void Publish(ComponentLifecycleEvent lifecycleEvent)
@@ -46,25 +61,6 @@ public sealed class ComponentLifecycleHub : IComponentLifecycleSink
         {
             LifecyclePublished?.Invoke(lifecycleEvent);
         }
-    }
-
-    public ComponentLifecycleEvent CreateEvent(
-        int componentId,
-        string componentType,
-        ComponentLifecyclePhase phase,
-        int? parentComponentId = null,
-        bool firstRender = false,
-        string source = "instrumentation")
-    {
-        return new ComponentLifecycleEvent(
-            Interlocked.Increment(ref _sequence),
-            componentId,
-            componentType,
-            parentComponentId,
-            phase,
-            firstRender,
-            source,
-            DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
     }
 
     public DevToolsComponentSnapshot GetSnapshot()

@@ -91,17 +91,17 @@ public sealed class DevToolsComponentBaseTests : BunitContext
         Assert.False(afterRenderEvents[1].FirstRender);
     }
 
-    private ComponentLifecycleHub RegisterHub()
+    private EventHub RegisterHub()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
         Services.AddSingleton(hub);
         return hub;
     }
 
-    private static IEnumerable<ComponentLifecyclePhase> ComponentBasePhases(ComponentLifecycleHub hub) =>
+    private static IEnumerable<ComponentLifecyclePhase> ComponentBasePhases(EventHub hub) =>
         ComponentBaseEvents(hub).Select(evt => evt.Phase);
 
-    private static List<ComponentLifecycleEvent> ComponentBaseEvents(ComponentLifecycleHub hub) =>
+    private static List<ComponentLifecycleEvent> ComponentBaseEvents(EventHub hub) =>
         hub.GetSnapshot()
             .RecentEvents
             .Where(evt => evt.Source == "component-base")

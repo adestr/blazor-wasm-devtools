@@ -11,7 +11,7 @@ public sealed class ComponentLifecycleHubTests
     [Fact]
     public void Publish_WhenInactive_DoesNotRaiseLifecyclePublished()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
         var raised = 0;
         hub.LifecyclePublished += _ => raised++;
 
@@ -24,7 +24,7 @@ public sealed class ComponentLifecycleHubTests
     [Fact]
     public void Publish_WhenActive_RaisesLifecyclePublished()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
         hub.SetActive(true);
         ComponentLifecycleEvent? published = null;
         hub.LifecyclePublished += evt => published = evt;
@@ -38,7 +38,7 @@ public sealed class ComponentLifecycleHubTests
     [Fact]
     public void GetSnapshot_TracksComponentsAndRecentEvents()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
         var lifecycleEvent = hub.CreateEvent(
             7,
             "Sample.App",
@@ -59,7 +59,7 @@ public sealed class ComponentLifecycleHubTests
     [Fact]
     public void CreateEvent_IncrementsSequence()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
 
         var first = hub.CreateEvent(1, "A", ComponentLifecyclePhase.Rendering);
         var second = hub.CreateEvent(2, "B", ComponentLifecyclePhase.Rendering);
@@ -70,7 +70,7 @@ public sealed class ComponentLifecycleHubTests
     [Fact]
     public void Publish_TrimsRecentEventsTo500()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
 
         for (var i = 0; i < 501; i++)
         {

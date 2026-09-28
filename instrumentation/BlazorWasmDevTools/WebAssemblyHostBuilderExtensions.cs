@@ -1,4 +1,3 @@
-using BlazorWasmDevTools.Extensions;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Logging;
 

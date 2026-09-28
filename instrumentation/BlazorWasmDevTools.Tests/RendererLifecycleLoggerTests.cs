@@ -14,7 +14,7 @@ public sealed class RendererLifecycleLoggerTests
     [InlineData("DisposingComponent", ComponentLifecyclePhase.Disposed)]
     public void Log_MapsRendererEventsToLifecyclePhases(string eventName, ComponentLifecyclePhase expectedPhase)
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
         var logger = new RendererLifecycleLoggerProvider(hub)
             .CreateLogger("Microsoft.AspNetCore.Components.RenderTree.Renderer");
 
@@ -40,7 +40,7 @@ public sealed class RendererLifecycleLoggerTests
     [Fact]
     public void CreateLogger_ReturnsDisabledLoggerForOtherCategories()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
         var provider = new RendererLifecycleLoggerProvider(hub);
         var logger = provider.CreateLogger("Other.Category");
 
@@ -50,7 +50,7 @@ public sealed class RendererLifecycleLoggerTests
     [Fact]
     public void Log_IgnoresUnknownEventNames()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = new EventHub();
         var logger = new RendererLifecycleLoggerProvider(hub)
             .CreateLogger("Microsoft.AspNetCore.Components.RenderTree.Renderer");
 

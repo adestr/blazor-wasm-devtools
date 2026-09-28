@@ -1,4 +1,6 @@
-namespace BlazorWasmDevTools.Models;
+using BlazorWasmDevTools.Models;
+
+namespace BlazorWasmDevTools.Events;
 
 /// <summary>
 /// Serializable lifecycle notification sent to the browser extension hook.
@@ -11,4 +13,5 @@ public sealed record ComponentLifecycleEvent(
     ComponentLifecyclePhase Phase,
     bool FirstRender,
     string Source,
-    long TimestampUnixMilliseconds);
+    long TimestampUnixMilliseconds) : IBlazorEvent;
+

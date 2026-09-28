@@ -1,3 +1,5 @@
+using BlazorWasmDevTools.Events;
+
 namespace BlazorWasmDevTools.Models;
 
 public sealed record DevToolsComponentSnapshot(
