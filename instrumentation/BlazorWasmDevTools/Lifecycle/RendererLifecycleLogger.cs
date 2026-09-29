@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmDevTools.Lifecycle;
 
-internal sealed class RendererLifecycleLogger(EventHub hub) : ILogger
+internal sealed class RendererLifecycleLogger(IEventSink eventSink) : ILogger
 {
-    private readonly EventHub _hub = hub;
+    private readonly IEventSink _eventSink = eventSink;
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
@@ -52,7 +52,7 @@ internal sealed class RendererLifecycleLogger(EventHub hub) : ILogger
             phase.Value,
             source: "renderer");
 
-        _hub.Publish(lifecycleEvent);
+        _eventSink.Publish(lifecycleEvent);
     }
 
     private static ComponentLifecyclePhase? MapPhase(string? eventName) =>

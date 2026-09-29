@@ -1,17 +1,18 @@
 using AutoFixture;
-using BlazorWasmDevTools.Lifecycle;
+using BlazorWasmDevTools.Events;
 using BlazorWasmDevTools.Models;
+using BlazorWasmDevTools.Tests.TestSupport;
 
 namespace BlazorWasmDevTools.Tests;
 
-public sealed class ComponentLifecycleHubTests
+public sealed class EventHubTests
 {
     private readonly Fixture _fixture = new();
 
     [Fact]
     public void Publish_WhenInactive_DoesNotRaiseLifecyclePublished()
     {
-        var hub = new EventHub();
+        var hub = TestEventHub.Create();
         var raised = 0;
         hub.LifecyclePublished += _ => raised++;
 
@@ -24,7 +25,7 @@ public sealed class ComponentLifecycleHubTests
     [Fact]
     public void Publish_WhenActive_RaisesLifecyclePublished()
     {
-        var hub = new EventHub();
+        var hub = TestEventHub.Create();
         hub.SetActive(true);
         ComponentLifecycleEvent? published = null;
         hub.LifecyclePublished += evt => published = evt;
@@ -38,12 +39,12 @@ public sealed class ComponentLifecycleHubTests
     [Fact]
     public void GetSnapshot_TracksComponentsAndRecentEvents()
     {
-        var hub = new EventHub();
-        var lifecycleEvent = hub.CreateEvent(
+        var hub = TestEventHub.Create();
+        var lifecycleEvent = EventFactory.Lifecycle(
             7,
             "Sample.App",
-            ComponentLifecyclePhase.Initializing,
             parentComponentId: 3,
+            phase: ComponentLifecyclePhase.Initializing,
             source: "renderer");
 
         hub.Publish(lifecycleEvent);
@@ -53,32 +54,36 @@ public sealed class ComponentLifecycleHubTests
         Assert.Single(snapshot.Components);
         Assert.Equal(7, snapshot.Components[0].ComponentId);
         Assert.Equal(ComponentLifecyclePhase.Initializing, snapshot.Components[0].LastPhase);
+        Assert.Equal(3, snapshot.Components[0].ParentComponentId);
         Assert.Single(snapshot.RecentEvents);
-    }
-
-    [Fact]
-    public void CreateEvent_IncrementsSequence()
-    {
-        var hub = new EventHub();
-
-        var first = hub.CreateEvent(1, "A", ComponentLifecyclePhase.Rendering);
-        var second = hub.CreateEvent(2, "B", ComponentLifecyclePhase.Rendering);
-
-        Assert.Equal(first.Sequence + 1, second.Sequence);
     }
 
     [Fact]
     public void Publish_TrimsRecentEventsTo500()
     {
-        var hub = new EventHub();
+        var hub = TestEventHub.Create();
 
         for (var i = 0; i < 501; i++)
         {
-            hub.Publish(hub.CreateEvent(i, "T", ComponentLifecyclePhase.Rendering));
+            hub.Publish(EventFactory.Lifecycle(i, "T", ComponentLifecyclePhase.Rendering));
         }
 
         Assert.Equal(500, hub.GetSnapshot().RecentEvents.Count);
         Assert.Equal(1, hub.GetSnapshot().RecentEvents[0].ComponentId);
+    }
+
+    [Fact]
+    public void Publish_GenericLifecycleEvent_StoresInSnapshot()
+    {
+        var hub = TestEventHub.Create();
+        IBlazorEvent lifecycleEvent = EventFactory.Lifecycle(
+            9,
+            "Generic.Path",
+            ComponentLifecyclePhase.Rendering);
+
+        hub.Publish(lifecycleEvent);
+
+        Assert.Equal(9, Assert.Single(hub.GetSnapshot().RecentEvents).ComponentId);
     }
 
     private ComponentLifecycleEvent CreateEvent() =>

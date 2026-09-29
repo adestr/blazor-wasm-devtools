@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmDevTools.Lifecycle;
 
-internal sealed class RendererLifecycleLoggerProvider(EventHub hub) : ILoggerProvider
+internal sealed class RendererLifecycleLoggerProvider(IEventSink eventSink) : ILoggerProvider
 {
-    private readonly EventHub _hub = hub;
+    private readonly IEventSink _eventSink = eventSink;
     private readonly ConcurrentDictionary<string, RendererLifecycleLogger> _loggers = new();
 
     public ILogger CreateLogger(string categoryName)
@@ -19,7 +19,7 @@ internal sealed class RendererLifecycleLoggerProvider(EventHub hub) : ILoggerPro
             return NullLogger.Instance;
         }
 
-        return _loggers.GetOrAdd(categoryName, _ => new RendererLifecycleLogger(_hub));
+        return _loggers.GetOrAdd(categoryName, _ => new RendererLifecycleLogger(_eventSink));
     }
 
     public void Dispose()

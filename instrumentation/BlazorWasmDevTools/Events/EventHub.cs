@@ -1,16 +1,19 @@
 using BlazorWasmDevTools.Models;
-using Microsoft.Extensions.Logging;
 
 namespace BlazorWasmDevTools.Events;
 
-public sealed class EventHub(ILogger<EventHub> logger) : IEventSource, IEventSink
+/// <summary>
+/// 
+/// </summary>
+/// <remarks>
+/// This class can not accept an <see cref="ILogger{EventHub}" /> argument, as it is consumed by <see cref="RendererLifecycleLoggerProvider" />.
+public sealed class EventHub() : IEventSource, IEventSink
 {
     private const int MaxRecentEvents = 500;
 
     private readonly Dictionary<int, ComponentDescriptor> _components = new();
     private readonly object _recentLock = new();
     private readonly List<ComponentLifecycleEvent> _recentEvents = [];
-    private readonly ILogger<EventHub> _logger = logger;
 
     // private long _sequence;
     private volatile bool _isActive;
@@ -32,9 +35,7 @@ public sealed class EventHub(ILogger<EventHub> logger) : IEventSource, IEventSin
             Publish(lifecycleEvent);
         }
 
-        _logger.LogInformation("Publishing event of type {EventType}", typeof(TEvent).Name);
         // TODO: Implement publishing logic for generic events.
-        _logger.LogError("Publishing of event type {EventType} is not implemented", typeof(TEvent).Name);
     }
 
     public void Publish(ComponentLifecycleEvent lifecycleEvent)

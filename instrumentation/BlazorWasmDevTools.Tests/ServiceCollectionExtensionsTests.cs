@@ -1,5 +1,8 @@
+using BlazorWasmDevTools.Events;
+using BlazorWasmDevTools.Lifecycle;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using NSubstitute;
 
@@ -17,7 +20,12 @@ public sealed class ServiceCollectionExtensionsTests
         await using var provider = services.BuildServiceProvider();
 
         Assert.NotNull(provider.GetService<DevToolsBridge>());
-        Assert.NotNull(provider.GetService<IComponentActivator>());
+        Assert.NotNull(provider.GetService<EventHub>());
+        Assert.Same(provider.GetService<EventHub>(), provider.GetService<IEventSource>());
+        Assert.Same(provider.GetService<EventHub>(), provider.GetService<IEventSink>());
         Assert.IsType<InstrumentedComponentActivator>(provider.GetService<IComponentActivator>());
+        Assert.Contains(
+            provider.GetServices<ILoggerProvider>(),
+            providerItem => providerItem is RendererLifecycleLoggerProvider);
     }
 }

@@ -1,5 +1,6 @@
-using BlazorWasmDevTools.Lifecycle;
+using BlazorWasmDevTools.Events;
 using BlazorWasmDevTools.Models;
+using BlazorWasmDevTools.Tests.TestSupport;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -93,7 +94,7 @@ public sealed class DevToolsComponentBaseTests : BunitContext
 
     private EventHub RegisterHub()
     {
-        var hub = new EventHub();
+        var hub = TestEventHub.Create();
         Services.AddSingleton(hub);
         return hub;
     }
