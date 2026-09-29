@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pack BlazorWasmDevTools. The package version is major.minor.<commit count on main>.<minutes since last commit on main>,
+# Pack BlazorWasmDevTools. The package version is major.minor.<commit count on main>,
 # where major.minor is the <Version> in the instrumentation project.
 set -euo pipefail
 
@@ -12,13 +12,6 @@ if [[ "$branch" != "main" ]]; then
 fi
 
 build="$(git rev-list --count main)"
-# main_last_commit_epoch="$(git log -1 --format=%ct main 2>/dev/null || git log -1 --format=%ct)"
-# if [[ -n "$main_last_commit_epoch" ]]; then
-#   now_epoch="$(date -u +%s)"
-#   revision="$(( (now_epoch - main_last_commit_epoch) / 60 ))"
-# else
-#   revision="0"
-# fi
 
 csproj="instrumentation/BlazorWasmDevTools/BlazorWasmDevTools.csproj"
 base_version="$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' "$csproj")"
