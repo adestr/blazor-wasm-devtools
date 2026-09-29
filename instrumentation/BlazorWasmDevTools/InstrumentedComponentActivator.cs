@@ -14,9 +14,9 @@ namespace BlazorWasmDevTools;
 /// </remarks>
 public class InstrumentedComponentActivator(IServiceProvider serviceProvider, IEventSink eventSink, ILogger<InstrumentedComponentActivator> logger) : IComponentActivator
 {
-    public readonly IServiceProvider _serviceProvider = serviceProvider;
-    public readonly IEventSink _eventSink = eventSink;
-    public readonly ILogger<InstrumentedComponentActivator> _logger = logger;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly IEventSink _eventSink = eventSink;
+    private readonly ILogger<InstrumentedComponentActivator> _logger = logger;
 
     public IComponent CreateInstance([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type componentType)
     //public IComponent CreateInstance(Type componentType)
