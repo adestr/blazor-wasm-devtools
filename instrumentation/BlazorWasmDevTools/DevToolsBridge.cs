@@ -1,12 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using BlazorWasmDevTools.Lifecycle;
-using BlazorWasmDevTools.Models;
+using BlazorWasmDevTools.Events;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
-namespace BlazorWasmDevTools.Bridge;
+namespace BlazorWasmDevTools;
 
-public sealed class BlazorWasmDevToolsBridge : IAsyncDisposable
+public sealed class DevToolsBridge : IAsyncDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -14,18 +14,28 @@ public sealed class BlazorWasmDevToolsBridge : IAsyncDisposable
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
     };
 
-    private readonly ComponentLifecycleHub _lifecycleHub;
-    private readonly IJSRuntime _jsRuntime;
-    private IJSObjectReference? _module;
-    private DotNetObjectReference<BlazorWasmDevToolsBridge>? _dotNetRef;
-    private bool _initialized;
-
-    public BlazorWasmDevToolsBridge(ComponentLifecycleHub lifecycleHub, IJSRuntime jsRuntime)
+    public DevToolsBridge(IJSRuntime js, IEventSource componentLifecycleHub, ILogger<DevToolsBridge> logger)
     {
-        _lifecycleHub = lifecycleHub;
-        _jsRuntime = jsRuntime;
+        _jsRuntime = js;
+        _lifecycleHub = componentLifecycleHub;
+        _logger = logger;
+
+        _dotNetRef = DotNetObjectReference.Create(this);
+
         _lifecycleHub.LifecyclePublished += PublishLifecycleEvent;
     }
+
+    private readonly IJSRuntime _jsRuntime;
+
+    private readonly IEventSource _lifecycleHub;
+
+    private IJSObjectReference? _module;
+
+    private readonly DotNetObjectReference<DevToolsBridge>? _dotNetRef;
+
+    private bool _initialized;
+
+    private ILogger<DevToolsBridge> _logger;
 
     public async Task InitializeAsync()
     {
@@ -38,7 +48,6 @@ public sealed class BlazorWasmDevToolsBridge : IAsyncDisposable
             "import",
             "./_content/BlazorWasmDevTools/blazorWasmDevTools.js");
 
-        _dotNetRef = DotNetObjectReference.Create(this);
         await _module.InvokeVoidAsync("initialize", _dotNetRef);
         _initialized = true;
     }

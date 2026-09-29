@@ -35,6 +35,16 @@ export function initialize(bridge) {
   }
 }
 
+export function notify(lifecycleEvent, component) {
+  const hook = getHook();
+  hook?.emit("lifecycle", { lifecycleEvent, component });
+
+  console.log("[bwdt] Notified lifecycle event:", {
+    lifecycleEvent,
+    component,
+  });
+}
+
 export function registerRenderer(bridge) {
   const hook = getHook();
   if (!hook) {
@@ -57,6 +67,9 @@ export function publishLifecycle(serializedEvent) {
     const event = JSON.parse(serializedEvent);
     appendLifecycle(event);
   } catch (err) {
-    console.error("[Blazor WASM DevTools] Failed to publish lifecycle event", err);
+    console.error(
+      "[Blazor WASM DevTools] Failed to publish lifecycle event",
+      err,
+    );
   }
 }

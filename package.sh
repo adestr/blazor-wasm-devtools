@@ -11,7 +11,7 @@ if [[ "$branch" != "main" ]]; then
   echo "warning: building a package on branch '${branch}', not main" >&2
 fi
 
-revision="$(git rev-list --count main)"
+build="$(git rev-list --count main)"
 
 csproj="instrumentation/BlazorWasmDevTools/BlazorWasmDevTools.csproj"
 base_version="$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' "$csproj")"
@@ -26,7 +26,8 @@ if [[ -z "$major" || -z "$minor" ]]; then
   exit 1
 fi
 
-package_version="${major}.${minor}.${revision}"
+# .${revision}"
+package_version="${major}.${minor}.${build}"
 echo "Packing BlazorWasmDevTools ${package_version}"
 
 cd instrumentation

@@ -1,3 +1,4 @@
+using BlazorWasmDevTools.Events;
 using BlazorWasmDevTools.Lifecycle;
 using BlazorWasmDevTools.Models;
 using Microsoft.AspNetCore.Components;
@@ -7,10 +8,10 @@ namespace BlazorWasmDevTools.Components;
 /// <summary>
 /// Optional base component that reports Blazor lifecycle phases to DevTools in addition to renderer logging.
 /// </summary>
-public abstract class DevToolsComponentBase : ComponentBase
+public abstract class InstrumentedComponentBase : ComponentBase
 {
     [Inject]
-    private ComponentLifecycleHub LifecycleHub { get; set; } = default!;
+    private EventHub LifecycleHub { get; set; } = default!;
 
     private int _componentId;
     private bool _hasRendered;
@@ -42,7 +43,7 @@ public abstract class DevToolsComponentBase : ComponentBase
 
     private void Publish(ComponentLifecyclePhase phase, bool firstRender = false)
     {
-        var lifecycleEvent = LifecycleHub.CreateEvent(
+        var lifecycleEvent = EventFactory.Lifecycle(
             _componentId,
             GetType().FullName ?? GetType().Name,
             phase,

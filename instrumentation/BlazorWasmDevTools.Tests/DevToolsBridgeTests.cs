@@ -1,18 +1,19 @@
 using System.Text.Json;
-using BlazorWasmDevTools.Bridge;
-using BlazorWasmDevTools.Lifecycle;
+using BlazorWasmDevTools.Events;
 using BlazorWasmDevTools.Models;
+using BlazorWasmDevTools.Tests.TestSupport;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.JSInterop;
 using NSubstitute;
 
 namespace BlazorWasmDevTools.Tests;
 
-public sealed class BlazorWasmDevToolsBridgeTests
+public sealed class DevToolsBridgeTests
 {
     [Fact]
     public async Task InitializeAsync_ImportsModuleAndCallsInitialize()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = TestEventHub.Create();
         var jsRuntime = Substitute.For<IJSRuntime>();
         var module = Substitute.For<IJSObjectReference>();
 
@@ -22,7 +23,7 @@ public sealed class BlazorWasmDevToolsBridgeTests
                 Arg.Any<object[]>())
             .Returns(new ValueTask<IJSObjectReference>(module));
 
-        var bridge = new BlazorWasmDevToolsBridge(hub, jsRuntime);
+        var bridge = CreateBridge(jsRuntime, hub);
 
         await bridge.InitializeAsync();
 
@@ -32,11 +33,11 @@ public sealed class BlazorWasmDevToolsBridgeTests
     [Fact]
     public void GetSnapshotJson_ReturnsCamelCasePayload()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = TestEventHub.Create();
         hub.Publish(
-            hub.CreateEvent(3, "App", ComponentLifecyclePhase.Initializing, source: "renderer"));
+            EventFactory.Lifecycle(3, "App", ComponentLifecyclePhase.Initializing, source: "renderer"));
 
-        var bridge = new BlazorWasmDevToolsBridge(hub, Substitute.For<IJSRuntime>());
+        var bridge = CreateBridge(Substitute.For<IJSRuntime>(), hub);
         var json = bridge.GetSnapshotJson();
 
         using var document = JsonDocument.Parse(json);
@@ -49,7 +50,7 @@ public sealed class BlazorWasmDevToolsBridgeTests
     [Fact]
     public async Task OnDevToolsActivated_ReplaysBufferedEventsAndRegistersRenderer()
     {
-        var hub = new ComponentLifecycleHub();
+        var hub = TestEventHub.Create();
         var jsRuntime = Substitute.For<IJSRuntime>();
         var module = Substitute.For<IJSObjectReference>();
 
@@ -57,10 +58,10 @@ public sealed class BlazorWasmDevToolsBridgeTests
             .InvokeAsync<IJSObjectReference>("import", Arg.Any<object[]>())
             .Returns(new ValueTask<IJSObjectReference>(module));
 
-        var bridge = new BlazorWasmDevToolsBridge(hub, jsRuntime);
+        var bridge = CreateBridge(jsRuntime, hub);
         await bridge.InitializeAsync();
 
-        hub.Publish(hub.CreateEvent(1, "A", ComponentLifecyclePhase.Rendering, source: "renderer"));
+        hub.Publish(EventFactory.Lifecycle(1, "A", ComponentLifecyclePhase.Rendering, source: "renderer"));
 
         bridge.OnDevToolsActivated();
 
@@ -68,4 +69,7 @@ public sealed class BlazorWasmDevToolsBridgeTests
         await module.Received(1).InvokeVoidAsync("registerRenderer", Arg.Any<object[]>());
         Assert.True(hub.IsActive);
     }
+
+    private static DevToolsBridge CreateBridge(IJSRuntime jsRuntime, IEventSource hub) =>
+        new(jsRuntime, hub, NullLogger<DevToolsBridge>.Instance);
 }

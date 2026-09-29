@@ -1,8 +1,13 @@
 using BlazorWasmDevTools.Models;
 
-namespace BlazorWasmDevTools.Lifecycle;
+namespace BlazorWasmDevTools.Events;
 
-public sealed class ComponentLifecycleHub : IComponentLifecycleSink
+/// <summary>
+/// 
+/// </summary>
+/// <remarks>
+/// This class can not accept an <see cref="ILogger{EventHub}" /> argument, as it is consumed by <see cref="RendererLifecycleLoggerProvider" />.
+public sealed class EventHub() : IEventSource, IEventSink
 {
     private const int MaxRecentEvents = 500;
 
@@ -10,7 +15,7 @@ public sealed class ComponentLifecycleHub : IComponentLifecycleSink
     private readonly object _recentLock = new();
     private readonly List<ComponentLifecycleEvent> _recentEvents = [];
 
-    private long _sequence;
+    // private long _sequence;
     private volatile bool _isActive;
 
     public event Action<ComponentLifecycleEvent>? LifecyclePublished;
@@ -20,6 +25,17 @@ public sealed class ComponentLifecycleHub : IComponentLifecycleSink
     public void SetActive(bool active)
     {
         _isActive = active;
+    }
+
+    public void Publish<TEvent>(TEvent @event)
+        where TEvent : IBlazorEvent
+    {
+        if (@event is ComponentLifecycleEvent lifecycleEvent)
+        {
+            Publish(lifecycleEvent);
+        }
+
+        // TODO: Implement publishing logic for generic events.
     }
 
     public void Publish(ComponentLifecycleEvent lifecycleEvent)
@@ -46,25 +62,6 @@ public sealed class ComponentLifecycleHub : IComponentLifecycleSink
         {
             LifecyclePublished?.Invoke(lifecycleEvent);
         }
-    }
-
-    public ComponentLifecycleEvent CreateEvent(
-        int componentId,
-        string componentType,
-        ComponentLifecyclePhase phase,
-        int? parentComponentId = null,
-        bool firstRender = false,
-        string source = "instrumentation")
-    {
-        return new ComponentLifecycleEvent(
-            Interlocked.Increment(ref _sequence),
-            componentId,
-            componentType,
-            parentComponentId,
-            phase,
-            firstRender,
-            source,
-            DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
     }
 
     public DevToolsComponentSnapshot GetSnapshot()

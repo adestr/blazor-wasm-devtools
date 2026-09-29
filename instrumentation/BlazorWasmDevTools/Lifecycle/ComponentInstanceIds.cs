@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 namespace BlazorWasmDevTools.Lifecycle;
 
 /// <summary>
-/// Stable ids for components that report lifecycle through <see cref="Components.DevToolsComponentBase"/>.
+/// Stable ids for components that report lifecycle through <see cref="Components.InstrumentedComponentBase"/>.
 /// These ids are independent from Blazor renderer component ids unless also observed via renderer logging.
 /// </summary>
 internal static class ComponentInstanceIds
