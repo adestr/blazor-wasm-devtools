@@ -1,6 +1,7 @@
 using BlazorWasmDevTools.Events;
 using BlazorWasmDevTools.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 
 namespace BlazorWasmDevTools;
 
@@ -13,6 +14,7 @@ public class InstrumentedWrapper : ComponentBase
 
     private readonly IEventSink _sink;
 
+    private readonly Guid _wrapperId = Guid.NewGuid();
     private readonly int _componentId;
     private readonly string _componentType;
     private readonly int? _parentComponentId;
@@ -57,5 +59,27 @@ public class InstrumentedWrapper : ComponentBase
         _sink.Publish(CreateEvent(ComponentLifecyclePhase.AfterRender));
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        builder.AddContent(0, InnerComponent);
+
+        base.BuildRenderTree(builder);
+    }
+
+    private Dictionary<string, object> CaptureProperties()
+    {
+        var properties = new Dictionary<string, object>();
+        var type = InnerComponent.GetType();
+        foreach (var prop in type.GetProperties())
+        {
+            if (prop.CanRead)
+            {
+                var value = prop.GetValue(InnerComponent);
+                properties[prop.Name] = value ?? "<null>";
+            }
+        }
+        return properties;
     }
 }

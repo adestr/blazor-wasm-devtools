@@ -14,15 +14,12 @@
   const lifecycleBuffer = [];
 
   const hook = {
-    isDormant: true,
     isActive: false,
     renderers: new Map(),
     lifecycleBuffer,
 
     activate() {
-      this.isDormant = false;
       this.isActive = true;
-      window.__BLAZOR_WASM_DEVTOOLS_DORMANT__ = false;
       window.__BLAZOR_WASM_DEVTOOLS_ACTIVE__ = true;
       this.emit("activate");
       console.info("[Blazor WASM DevTools] extension activated");
@@ -64,7 +61,6 @@
   };
 
   window.__BLAZOR_WASM_DEVTOOLS_GLOBAL_HOOK__ = hook;
-  window.__BLAZOR_WASM_DEVTOOLS_DORMANT__ = true;
   window.__BLAZOR_WASM_DEVTOOLS_ACTIVE__ = false;
 
   window.addEventListener(PANEL_EVENT, (event) => {

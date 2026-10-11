@@ -35,15 +35,15 @@ export function initialize(bridge) {
   }
 }
 
-export function notify(lifecycleEvent, component) {
-  const hook = getHook();
-  hook?.emit("lifecycle", { lifecycleEvent, component });
+// export function notify(lifecycleEvent, component) {
+//   const hook = getHook();
+//   hook?.emit("lifecycle", { lifecycleEvent, component });
 
-  console.log("[bwdt] Notified lifecycle event:", {
-    lifecycleEvent,
-    component,
-  });
-}
+//   console.log("[bwdt] Notified lifecycle event:", {
+//     lifecycleEvent,
+//     component,
+//   });
+// }
 
 export function registerRenderer(bridge) {
   const hook = getHook();
