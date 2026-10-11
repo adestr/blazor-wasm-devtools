@@ -14,20 +14,20 @@ public sealed class DevToolsBridge : IAsyncDisposable
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
     };
 
-    public DevToolsBridge(IJSRuntime js, IEventSource componentLifecycleHub, ILogger<DevToolsBridge> logger)
+    public DevToolsBridge(IJSRuntime js, IEventSource eventSource, ILogger<DevToolsBridge> logger)
     {
         _jsRuntime = js;
-        _lifecycleHub = componentLifecycleHub;
+        _eventSource = eventSource;
         _logger = logger;
 
         _dotNetRef = DotNetObjectReference.Create(this);
 
-        _lifecycleHub.LifecyclePublished += PublishLifecycleEvent;
+        _eventSource.LifecyclePublished += PublishLifecycleEvent;
     }
 
     private readonly IJSRuntime _jsRuntime;
 
-    private readonly IEventSource _lifecycleHub;
+    private readonly IEventSource _eventSource;
 
     private IJSObjectReference? _module;
 
@@ -55,19 +55,20 @@ public sealed class DevToolsBridge : IAsyncDisposable
     [JSInvokable]
     public void OnDevToolsActivated()
     {
-        foreach (var lifecycleEvent in _lifecycleHub.GetSnapshot().RecentEvents)
+        _logger.LogInformation("DevTools activated.");
+        foreach (var lifecycleEvent in _eventSource.GetSnapshot().RecentEvents)
         {
             PublishLifecycleEvent(lifecycleEvent);
         }
 
-        _lifecycleHub.SetActive(true);
+        _eventSource.SetActive(true);
         _ = RegisterRendererAsync();
     }
 
     [JSInvokable]
     public string GetSnapshotJson()
     {
-        var snapshot = _lifecycleHub.GetSnapshot();
+        var snapshot = _eventSource.GetSnapshot();
         return JsonSerializer.Serialize(snapshot, JsonOptions);
     }
 
@@ -94,7 +95,7 @@ public sealed class DevToolsBridge : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        _lifecycleHub.LifecyclePublished -= PublishLifecycleEvent;
+        _eventSource.LifecyclePublished -= PublishLifecycleEvent;
         _dotNetRef?.Dispose();
         if (_module is not null)
         {
