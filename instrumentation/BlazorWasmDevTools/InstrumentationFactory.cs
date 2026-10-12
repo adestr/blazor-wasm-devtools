@@ -82,21 +82,12 @@ public class InstrumentationFactory(IEventSink eventSink, ILogger<Instrumentatio
         return generated;
     }
 
-    private void InspectMethodInvocation(string methodName, params object?[]? args)
-    {
-        if (!Inspectable.IsInspectable(methodName))
-        {
-            return;
-        }
-        LogMethodInvocation(methodName, args);
-    }
-
     private void LogMethodInvocation(string methodName, params object?[]? args)
     {
         var e = EventFactory.Generic("MethodInvocation", new Dictionary<string, object?>
         {
             { "Method", methodName },
-            { "Arguments", args ?? Array.Empty<object?>() }
+            { "Arguments", args ?? [] }
         });
         _eventSink.Publish(e);
     }
@@ -158,10 +149,17 @@ public class InstrumentationFactory(IEventSink eventSink, ILogger<Instrumentatio
                 methodIL.Emit(OpCodes.Ldarg, i); // Load each argument onto the stack
             }
 
-            MethodInfo inspectionMethod = typeof(InstrumentationFactory).GetMethod(nameof(InspectMethodInvocation), BindingFlags.Static | BindingFlags.NonPublic)!;
-            string name = m.Name;
-            methodIL.Emit(OpCodes.Ldstr, name);
-            methodIL.Emit(OpCodes.Call, inspectionMethod);
+            if (Inspectable.IsInspectable(m.Name))
+            {
+                MethodInfo inspectionMethod = typeof(InstrumentationFactory).GetMethod(nameof(LogMethodInvocation), BindingFlags.Instance | BindingFlags.NonPublic)!;
+                string name = m.Name;
+                methodIL.Emit(OpCodes.Ldstr, name);
+                for (int i = 1; i <= m.GetParameters().Length; i++)
+                {
+                    methodIL.Emit(OpCodes.Ldarg, i); // Load each argument onto the stack
+                }
+                methodIL.Emit(OpCodes.Call, inspectionMethod);
+            }
 
             methodIL.Emit(OpCodes.Call, m);
             methodIL.Emit(OpCodes.Ret);

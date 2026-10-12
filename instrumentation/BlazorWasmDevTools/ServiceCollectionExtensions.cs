@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddLogging();
 
         services.AddSingleton<DevToolsBridge>();
+        services.AddSingleton<InstrumentationFactory>();
         services.AddScoped<IComponentActivator, InstrumentedComponentActivator>();
 
         services.AddSingleton<EventHub>();
