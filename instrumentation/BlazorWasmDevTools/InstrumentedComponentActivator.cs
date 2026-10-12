@@ -19,7 +19,9 @@ public class InstrumentedComponentActivator(IServiceProvider serviceProvider, IE
     private readonly IEventSink _eventSink = eventSink;
     private readonly DevToolsBridge _devToolsBridge = devToolsBridge;
     private readonly ILogger<InstrumentedComponentActivator> _logger = logger;
-    private readonly InstrumentationFactory _instrumentationFactory = new InstrumentationFactory(serviceProvider, eventSink);
+    private readonly InstrumentationFactory _instrumentationFactory = new InstrumentationFactory(
+        eventSink,
+        serviceProvider.GetRequiredService<ILogger<InstrumentationFactory>>());
     private bool _bridgeInitRequested;
     private bool _bridgeInitialized;
     private object _lock = new();
@@ -51,7 +53,10 @@ public class InstrumentedComponentActivator(IServiceProvider serviceProvider, IE
 
         if (instance is ComponentBase)
         {
-            instance = _instrumentationFactory.Wrap(instance);
+            var targetType = _instrumentationFactory.Wrap(componentType);
+            var wrapped = ActivatorUtilities.CreateInstance(_serviceProvider, targetType) as IComponent
+                ?? throw new InvalidOperationException($"Failed to create an instance of component type {targetType.FullName}");
+            instance = wrapped;
 
             var @event = EventFactory.Generic("Created", new Dictionary<string, object?>()
             {
