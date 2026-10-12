@@ -102,13 +102,13 @@ export function App({
                 >
                   <span className="text-[#888]">
                     {formatTime(event.timestampUnixMilliseconds)}
-                  </span>
-                  <span className="text-[#9cdcfe]">#{event.componentId}</span>
+                  </span>{" "}
+                  <span className="text-[#9cdcfe]">#{event.componentId}</span>{" "}
                   <span className="text-[#87ceeb]">
-                    {event.parentComponentId ?? "-"}
-                  </span>
-                  <span className="text-[#ce9178]">{event.componentType}</span>
-                  <span className="text-[#dcdcaa]">{event.phase}</span>
+                    p{event.parentComponentId ?? "-"}
+                  </span>{" "}
+                  <span className="text-[#ce9178]">{event.componentType}</span>{" "}
+                  <span className="text-[#dcdcaa]">{event.phase}</span>{" "}
                   {event.firstRender ? (
                     <span className="text-[#4ec9b0]"> first</span>
                   ) : null}
