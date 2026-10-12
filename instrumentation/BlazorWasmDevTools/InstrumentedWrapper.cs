@@ -10,28 +10,34 @@ namespace BlazorWasmDevTools;
 /// </summary>
 public class InstrumentedWrapper : ComponentBase
 {
-    private ComponentBase InnerComponent { get; }
+    private IComponent InnerComponent { get; }
 
     private readonly IEventSink _sink;
 
     private readonly Guid _wrapperId = Guid.NewGuid();
+
     private readonly int _componentId;
-    private readonly string _componentType;
+
+    private readonly string _componentName;
+
+    private readonly Type _componentType;
+
     private readonly int? _parentComponentId;
 
     /// <param name="innerComponent"></param>
-    public InstrumentedWrapper(ComponentBase innerComponent, IEventSink sink)
+    public InstrumentedWrapper(IComponent innerComponent, IEventSink sink)
     {
         InnerComponent = innerComponent;
         _sink = sink;
 
         _componentId = InnerComponent.GetHashCode();
-        _componentType = InnerComponent.GetType().Name;
+        _componentType = InnerComponent.GetType();
+        _componentName = _componentType.Name;
         _parentComponentId = null;
     }
 
     private ComponentLifecycleEvent CreateEvent(ComponentLifecyclePhase phase)
-        => EventFactory.Lifecycle(_componentId, _componentType, _parentComponentId, phase);
+        => EventFactory.Lifecycle(_componentId, _componentName, _parentComponentId, phase);
 
     protected override void OnInitialized()
     {
@@ -56,14 +62,36 @@ public class InstrumentedWrapper : ComponentBase
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _sink.Publish(CreateEvent(ComponentLifecyclePhase.AfterRender));
+        var e = EventFactory.Lifecycle(_componentId, _componentName, _parentComponentId, ComponentLifecyclePhase.AfterRender, firstRender);
+        _sink.Publish(e);
 
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    // We're not actually rendering the component here, we're rendering a duplicate of the component with the same attributes.
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
-        builder.AddContent(0, InnerComponent);
+        int seq = 0;
+        // This is disgusting
+        InstrumentedComponentActivator.Skip = true;
+        builder.OpenComponent(seq++, _componentType);
+
+        var properties = _componentType.GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+        foreach (var p in properties)
+        {
+            var getter = p.GetMethod;
+            var value = getter?.Invoke(InnerComponent, null);
+            if (value is not null)
+            {
+                builder.AddAttribute(seq++, p.Name, value);
+            }
+            else
+            {
+                seq++;
+            }
+        }
+
+        builder.CloseComponent();
 
         base.BuildRenderTree(builder);
     }

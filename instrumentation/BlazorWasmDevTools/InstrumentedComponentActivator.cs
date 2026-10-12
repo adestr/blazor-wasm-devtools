@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using BlazorWasmDevTools.Components;
 using BlazorWasmDevTools.Events;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,28 +19,45 @@ public class InstrumentedComponentActivator(IServiceProvider serviceProvider, IE
     private readonly IEventSink _eventSink = eventSink;
     private readonly DevToolsBridge _devToolsBridge = devToolsBridge;
     private readonly ILogger<InstrumentedComponentActivator> _logger = logger;
+    private readonly InstrumentationFactory _instrumentationFactory = new InstrumentationFactory(serviceProvider, eventSink);
     private bool _bridgeInitRequested;
     private bool _bridgeInitialized;
     private object _lock = new();
 
+    public static bool Skip
+    {
+        get
+        {
+            var skip = _skip;
+            _skip = false;
+            return skip;
+        }
+        set { _skip = value; }
+    }
+    private static bool _skip;
+
     public IComponent CreateInstance([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type componentType)
     {
-        // TODO: Step down the logging level once the instrumentation is stable.
-        _logger.LogInformation("Creating instance of component type {ComponentType}", componentType);
-
         var instance = ActivatorUtilities.CreateInstance(_serviceProvider, componentType) as IComponent
             ?? throw new InvalidOperationException($"Failed to create an instance of component type {componentType.FullName}");
 
         _ = EnsureDevToolsInitializedAsync();
 
-        if (instance is ComponentBase cb)
+        // If the component is already wrapped with an instrumented wrapper, return it as is.
+        if (instance.GetType().Name.StartsWith(InstrumentationFactory.Prefix))
         {
-            _logger.LogInformation("Wrapping component instance of type {ComponentType} with InstrumentedWrapper", componentType);
-            var @event = EventFactory.Generic("Created", []);
-            _eventSink.Publish(@event);
+            return instance;
+        }
 
-            // TODO: We'll need to wrap the component so that it has the same interface
-            return new InstrumentedWrapper(cb, _eventSink);
+        if (instance is ComponentBase)
+        {
+            instance = _instrumentationFactory.Wrap(instance);
+
+            var @event = EventFactory.Generic("Created", new Dictionary<string, object?>()
+            {
+                { "Name", componentType.FullName }
+            });
+            _eventSink.Publish(@event);
         }
 
         return instance;
