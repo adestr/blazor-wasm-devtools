@@ -30,22 +30,19 @@ public class InstrumentationFactory(IServiceProvider serviceProvider, IEventSink
             _moduleBuilder = assemblyBuilder.DefineDynamicModule("DynamicModule");
         }
 
+        // TODO: Wrap this in a try / catch and if anything goes wrong, just return the original component
+
         Type typeToWrap = component.GetType();
         string name = typeToWrap.Name;
         string wrappedName = Prefix + name;
-        //Type baseType = component is ComponentBase ? typeof(ComponentBase) : typeof(IComponent);
         TypeBuilder typeBuilder = _moduleBuilder.DefineType(wrappedName, TypeAttributes.Public | TypeAttributes.Class, typeToWrap);
 
         FieldBuilder componentField = typeBuilder.DefineField("_component", typeToWrap, FieldAttributes.Private);
 
-        // Define a constructor that takes the original component as a parameter
-        ConstructorBuilder ctor = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, new Type[] { typeToWrap });
+        ConstructorBuilder ctor = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, [typeToWrap]);
         ILGenerator ctorIL = ctor.GetILGenerator();
         ctorIL.Emit(OpCodes.Ldarg_0); // 'this'
-        ctorIL.Emit(OpCodes.Call, typeof(object).GetConstructor(Type.EmptyTypes)!); // Call base constructor
-        ctorIL.Emit(OpCodes.Ldarg_0); // 'this'
-        ctorIL.Emit(OpCodes.Ldarg_1); // Load the component parameter
-        ctorIL.Emit(OpCodes.Stfld, componentField); // Store it in the _component field
+        ctorIL.Emit(OpCodes.Call, typeToWrap.GetConstructor(Type.EmptyTypes)!); // Call base constructor
         ctorIL.Emit(OpCodes.Ret);
 
         void LogPropertySet(string name, object? value)
@@ -59,50 +56,58 @@ public class InstrumentationFactory(IServiceProvider serviceProvider, IEventSink
         }
         MethodInfo? miPropertySet = typeof(InstrumentationFactory).GetMethod(nameof(LogPropertySet), BindingFlags.NonPublic | BindingFlags.Instance);
 
-        // Get all the properties for the component
-        var properties = typeToWrap.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-        foreach (var p in properties)
-        {
-            MethodInfo? getter = p.GetMethod;
-            MethodInfo? setter = p.SetMethod;
+        // // Get all the properties for the component
+        // var properties = typeToWrap.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        // foreach (var p in properties)
+        // {
+        //     MethodInfo? getter = p.GetMethod;
+        //     MethodInfo? setter = p.SetMethod;
 
-            if (getter == null || setter == null)
-            {
-                continue; // Skip properties without both getter and setter
-            }
+        //     if (getter == null || setter == null)
+        //     {
+        //         continue; // Skip properties without both getter and setter
+        //     }
 
-            PropertyBuilder propertyBuilder = typeBuilder.DefineProperty(p.Name, p.Attributes, p.PropertyType, Type.EmptyTypes);
+        //     PropertyBuilder propertyBuilder = typeBuilder.DefineProperty(p.Name, p.Attributes, p.PropertyType, Type.EmptyTypes);
 
-            // We will need a getter and a setter
-            MethodBuilder getterBuilder = typeBuilder.DefineMethod("get_" + p.Name, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, p.PropertyType, Type.EmptyTypes);
-            ILGenerator getterIL = getterBuilder.GetILGenerator();
-            // What we should be doing here is calling the original getter of the property, on the underlying component instance.
-            getterIL.Emit(OpCodes.Ldarg_0); // 'this'
-            getterIL.Emit(OpCodes.Ldfld, componentField); // Load the underlying component instance onto the stack
-            getterIL.Emit(OpCodes.Call, getter);
-            getterIL.Emit(OpCodes.Ret);
+        //     // We will need a getter and a setter
+        //     MethodBuilder getterBuilder = typeBuilder.DefineMethod("get_" + p.Name, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, p.PropertyType, Type.EmptyTypes);
+        //     ILGenerator getterIL = getterBuilder.GetILGenerator();
+        //     // What we should be doing here is calling the original getter of the property, on the underlying component instance.
+        //     getterIL.Emit(OpCodes.Ldarg_0); // 'this'
+        //     getterIL.Emit(OpCodes.Ldfld, componentField); // Load the underlying component instance onto the stack
+        //     getterIL.Emit(OpCodes.Call, getter);
+        //     getterIL.Emit(OpCodes.Ret);
 
-            MethodBuilder setterBuilder = typeBuilder.DefineMethod("set_" + p.Name, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, null, new Type[] { p.PropertyType });
-            ILGenerator setterIL = setterBuilder.GetILGenerator();
-            if (miPropertySet is not null)
-            {
-                setterIL.Emit(OpCodes.Ldstr, p.Name); // Load the property name onto the stack
-                setterIL.Emit(OpCodes.Ldarg_1); // Load the value argument onto the stack
-                setterIL.Emit(OpCodes.Call, miPropertySet);
-            }
-            setterIL.Emit(OpCodes.Ldarg_0); // 'this'
-            setterIL.Emit(OpCodes.Ldarg_1); // Load the value argument onto the stack
-            setterIL.Emit(OpCodes.Call, setter);
-            setterIL.Emit(OpCodes.Ret);
+        //     MethodBuilder setterBuilder = typeBuilder.DefineMethod("set_" + p.Name, MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, null, new Type[] { p.PropertyType });
+        //     ILGenerator setterIL = setterBuilder.GetILGenerator();
+        //     if (miPropertySet is not null)
+        //     {
+        //         setterIL.Emit(OpCodes.Ldstr, p.Name); // Load the property name onto the stack
+        //         setterIL.Emit(OpCodes.Ldarg_1); // Load the value argument onto the stack
+        //         setterIL.Emit(OpCodes.Call, miPropertySet);
+        //     }
+        //     setterIL.Emit(OpCodes.Ldarg_0); // 'this'
+        //     setterIL.Emit(OpCodes.Ldfld, componentField); // Load the underlying component instance onto the stack before calling the setter
+        //     setterIL.Emit(OpCodes.Ldarg_1); // Load the value argument onto the stack
+        //     setterIL.Emit(OpCodes.Call, setter);
+        //     setterIL.Emit(OpCodes.Ret);
 
-            propertyBuilder.SetGetMethod(getterBuilder);
-            propertyBuilder.SetSetMethod(setterBuilder);
-        }
+        //     propertyBuilder.SetGetMethod(getterBuilder);
+        //     propertyBuilder.SetSetMethod(setterBuilder);
+        // }
 
         var methods = typeToWrap.GetMethods(BindingFlags.Instance | BindingFlags.Public);
         foreach (var m in methods)
         {
-            MethodBuilder methodBuilder = typeBuilder.DefineMethod(m.Name, m.Attributes, m.ReturnType, m.GetParameters().Select(p => p.ParameterType).ToArray());
+            if (!m.IsVirtual)
+            {
+                // Do not wrap non-virtual methods, as they cannot be overridden.
+                continue;
+            }
+
+            var methodAttributes = MethodAttributes.Public | MethodAttributes.ReuseSlot;
+            MethodBuilder methodBuilder = typeBuilder.DefineMethod(m.Name, methodAttributes, m.ReturnType, m.GetParameters().Select(p => p.ParameterType).ToArray());
             ILGenerator methodIL = methodBuilder.GetILGenerator();
             methodIL.Emit(OpCodes.Ldarg_0); // 'this'
             for (int i = 1; i <= m.GetParameters().Length; i++)
@@ -111,6 +116,25 @@ public class InstrumentationFactory(IServiceProvider serviceProvider, IEventSink
             }
             methodIL.Emit(OpCodes.Call, m);
             methodIL.Emit(OpCodes.Ret);
+        }
+
+        // For ComponentBase, we must transfer invocations for BuildRenderTree to the underlying component instance.
+        // It's a protected method, but we still need to forward calls to the underlying component instance.
+        if (typeof(ComponentBase).IsAssignableFrom(typeToWrap))
+        {
+            MethodInfo? buildRenderTree = typeToWrap.GetMethod("BuildRenderTree", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (buildRenderTree != null)
+            {
+                MethodBuilder methodBuilder = typeBuilder.DefineMethod(buildRenderTree.Name, buildRenderTree.Attributes, buildRenderTree.ReturnType, buildRenderTree.GetParameters().Select(p => p.ParameterType).ToArray());
+                ILGenerator methodIL = methodBuilder.GetILGenerator();
+                methodIL.Emit(OpCodes.Ldarg_0); // 'this'
+                for (int i = 1; i <= buildRenderTree.GetParameters().Length; i++)
+                {
+                    methodIL.Emit(OpCodes.Ldarg, i); // Load each argument onto the stack
+                }
+                methodIL.Emit(OpCodes.Call, buildRenderTree);
+                methodIL.Emit(OpCodes.Ret);
+            }
         }
 
         // TODO: Events?
