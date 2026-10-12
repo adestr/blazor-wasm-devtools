@@ -50,31 +50,14 @@ public class InstrumentationFactory(IEventSink eventSink, ILogger<Instrumentatio
             _moduleBuilder = assemblyBuilder.DefineDynamicModule("DynamicModule");
         }
 
-        // TODO: Wrap this in a try / catch and if anything goes wrong, just return the original component
-
         string name = typeToWrap.Name;
         string wrappedName = Prefix + name;
         TypeBuilder typeBuilder = _moduleBuilder.DefineType(wrappedName, TypeAttributes.Public | TypeAttributes.Class, typeToWrap);
 
-        var ctors = typeToWrap.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
-        ctors = [.. ctors.OrderBy(ctor => ctor.GetParameters().Length)];
-        var targetCtor = ctors.FirstOrDefault();
-        if (targetCtor == null)
+        if (!TryWrapConstructor(typeToWrap, typeBuilder))
         {
-            _logger.LogWarning("No suitable constructor found for type {TypeName}", typeToWrap.Name);
             return typeToWrap;
         }
-
-        Type[] parameterTypes = [.. targetCtor.GetParameters().Select(p => p.ParameterType)];
-        ConstructorBuilder ctor = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, parameterTypes);
-        ILGenerator ctorIL = ctor.GetILGenerator();
-        ctorIL.Emit(OpCodes.Ldarg_0); // 'this'
-        for (int i = 1; i <= parameterTypes.Length; i++)
-        {
-            ctorIL.Emit(OpCodes.Ldarg, i); // Load each argument onto the stack
-        }
-        ctorIL.Emit(OpCodes.Call, targetCtor); // Call base constructor
-        ctorIL.Emit(OpCodes.Ret);
 
         void LogPropertySet(string name, object? value)
         {
@@ -87,12 +70,82 @@ public class InstrumentationFactory(IEventSink eventSink, ILogger<Instrumentatio
         }
         MethodInfo? miPropertySet = typeof(InstrumentationFactory).GetMethod(nameof(LogPropertySet), BindingFlags.NonPublic | BindingFlags.Instance);
 
+        WrapPublicVirtualMethods(typeToWrap, typeBuilder);
+
+        WrapBuildRenderTree(typeToWrap, typeBuilder);
+
+        // TODO: Events?
+
+        Type generated = typeBuilder.CreateType();
+        _wrappedTypes[typeToWrap] = generated;
+
+        return generated;
+    }
+
+    private void InspectMethodInvocation(string methodName, params object?[]? args)
+    {
+        if (!Inspectable.IsInspectable(methodName))
+        {
+            return;
+        }
+        LogMethodInvocation(methodName, args);
+    }
+
+    private void LogMethodInvocation(string methodName, params object?[]? args)
+    {
+        var e = EventFactory.Generic("MethodInvocation", new Dictionary<string, object?>
+        {
+            { "Method", methodName },
+            { "Arguments", args ?? Array.Empty<object?>() }
+        });
+        _eventSink.Publish(e);
+    }
+
+    /// <summary>
+    /// Tries to wrap the constructor of the specified type.
+    /// </summary>
+    /// <remarks>
+    /// This method wraps the first public constructor of the specified type, sorted by number of parameters.
+    /// </remarks>
+    /// <param name="typeToWrap"></param>
+    /// <param name="typeBuilder"></param>
+    /// <returns>A boolean indicating whether the constructor was successfully wrapped.</returns>
+    private bool TryWrapConstructor(Type typeToWrap, TypeBuilder typeBuilder)
+    {
+        var ctors = typeToWrap.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+        ctors = [.. ctors.OrderBy(ctor => ctor.GetParameters().Length)];
+        var targetCtor = ctors.FirstOrDefault();
+        if (targetCtor == null)
+        {
+            _logger.LogWarning("No suitable constructor found for type {TypeName}", typeToWrap.Name);
+            return false;
+        }
+
+        Type[] parameterTypes = [.. targetCtor.GetParameters().Select(p => p.ParameterType)];
+        ConstructorBuilder ctor = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, parameterTypes);
+        ILGenerator ctorIL = ctor.GetILGenerator();
+        ctorIL.Emit(OpCodes.Ldarg_0); // 'this'
+        for (int i = 1; i <= parameterTypes.Length; i++)
+        {
+            ctorIL.Emit(OpCodes.Ldarg, i); // Load each argument onto the stack
+        }
+        ctorIL.Emit(OpCodes.Call, targetCtor); // Call base constructor
+        ctorIL.Emit(OpCodes.Ret);
+        return true;
+    }
+
+    /// <summary>
+    /// Wraps all public virtual methods of the specified type.
+    /// </summary>
+    /// <param name="typeToWrap"></param>
+    /// <param name="typeBuilder"></param>
+    private static void WrapPublicVirtualMethods(Type typeToWrap, TypeBuilder typeBuilder)
+    {
         var methods = typeToWrap.GetMethods(BindingFlags.Instance | BindingFlags.Public);
         foreach (var m in methods)
         {
             if (!m.IsVirtual)
             {
-                // Do not wrap non-virtual methods, as they cannot be overridden.
                 continue;
             }
 
@@ -104,12 +157,24 @@ public class InstrumentationFactory(IEventSink eventSink, ILogger<Instrumentatio
             {
                 methodIL.Emit(OpCodes.Ldarg, i); // Load each argument onto the stack
             }
+
+            MethodInfo inspectionMethod = typeof(InstrumentationFactory).GetMethod(nameof(InspectMethodInvocation), BindingFlags.Static | BindingFlags.NonPublic)!;
+            string name = m.Name;
+            methodIL.Emit(OpCodes.Ldstr, name);
+            methodIL.Emit(OpCodes.Call, inspectionMethod);
+
             methodIL.Emit(OpCodes.Call, m);
             methodIL.Emit(OpCodes.Ret);
         }
+    }
 
-        // For ComponentBase, we must transfer invocations for BuildRenderTree to the underlying component instance.
-        // It's a protected method, but we still need to forward calls to the underlying component instance.
+    /// <summary>
+    /// Wraps the BuildRenderTree method of a Blazor component, if it exists.
+    /// </summary>
+    /// <param name="typeToWrap"></param>
+    /// <param name="typeBuilder"></param>
+    private static void WrapBuildRenderTree(Type typeToWrap, TypeBuilder typeBuilder)
+    {
         if (typeof(ComponentBase).IsAssignableFrom(typeToWrap))
         {
             MethodInfo? buildRenderTree = typeToWrap.GetMethod("BuildRenderTree", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -127,12 +192,29 @@ public class InstrumentationFactory(IEventSink eventSink, ILogger<Instrumentatio
                 methodIL.Emit(OpCodes.Ret);
             }
         }
+    }
 
-        // TODO: Events?
+    private static class Inspectable
+    {
+        internal static bool IsInspectable(string methodName)
+        {
+            return methodName switch
+            {
+                OnInitialized => true,
+                OnInitializedAsync => true,
+                OnParametersSet => true,
+                OnParametersSetAsync => true,
+                OnAfterRender => true,
+                OnAfterRenderAsync => true,
+                _ => false
+            };
+        }
 
-        Type generated = typeBuilder.CreateType();
-        _wrappedTypes[typeToWrap] = generated;
-
-        return generated;
+        internal const string OnInitialized = "OnInitialized";
+        internal const string OnInitializedAsync = "OnInitializedAsync";
+        internal const string OnParametersSet = "OnParametersSet";
+        internal const string OnParametersSetAsync = "OnParametersSetAsync";
+        internal const string OnAfterRender = "OnAfterRender";
+        internal const string OnAfterRenderAsync = "OnAfterRenderAsync";
     }
 }
