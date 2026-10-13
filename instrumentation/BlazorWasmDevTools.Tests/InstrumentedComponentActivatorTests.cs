@@ -10,45 +10,49 @@ namespace BlazorWasmDevTools.Tests;
 
 public sealed class InstrumentedComponentActivatorTests
 {
-    // [Fact]
-    // public void CreateInstance_WrapsComponentBaseAndPublishesCreatedEvent()
-    // {
-    //     var sink = new CapturingEventSink();
-    //     var services = new ServiceCollection();
-    //     services.AddSingleton<IEventSink>(sink);
-    //     using var provider = services.BuildServiceProvider();
+    [Fact]
+    public void CreateInstance_WrapsComponentBaseAndPublishesCreatedEvent()
+    {
+        var sink = new CapturingEventSink();
+        var services = new ServiceCollection();
+        var factory = new InstrumentationFactory(sink, NullLogger<InstrumentationFactory>.Instance);
+        services.AddSingleton<IEventSink>(sink);
+        using var provider = services.BuildServiceProvider();
 
-    //     var activator = new InstrumentedComponentActivator(
-    //         provider,
-    //         sink,
-    //         CreateBridge(),
-    //         NullLogger<InstrumentedComponentActivator>.Instance);
+        var activator = new InstrumentedComponentActivator(
+            provider,
+            sink,
+            CreateBridge(),
+            factory,
+            NullLogger<InstrumentedComponentActivator>.Instance);
 
-    //     var instance = activator.CreateInstance(typeof(ProbeComponent));
+        var instance = activator.CreateInstance(typeof(ProbeComponent));
 
-    //     Assert.IsType<InstrumentedWrapper>(instance);
-    //     var created = Assert.Single(sink.Events.OfType<BlazorEvent>());
-    //     Assert.Equal("Created", created.Name);
-    // }
+        Assert.IsAssignableFrom<ProbeComponent>(instance);
+        var created = Assert.Single(sink.Events.OfType<BlazorEvent>());
+        Assert.Equal("Created", created.Name);
+    }
 
-    // [Fact]
-    // public void CreateInstance_PassesThroughNonComponentBase()
-    // {
-    //     var sink = new CapturingEventSink();
-    //     var services = new ServiceCollection();
-    //     using var provider = services.BuildServiceProvider();
+    [Fact]
+    public void CreateInstance_PassesThroughNonComponentBase()
+    {
+        var sink = new CapturingEventSink();
+        var services = new ServiceCollection();
+        var factory = new InstrumentationFactory(sink, NullLogger<InstrumentationFactory>.Instance);
+        using var provider = services.BuildServiceProvider();
 
-    //     var activator = new InstrumentedComponentActivator(
-    //         provider,
-    //         sink,
-    //         CreateBridge(),
-    //         NullLogger<InstrumentedComponentActivator>.Instance);
+        var activator = new InstrumentedComponentActivator(
+            provider,
+            sink,
+            CreateBridge(),
+            factory,
+            NullLogger<InstrumentedComponentActivator>.Instance);
 
-    //     var instance = activator.CreateInstance(typeof(RawComponent));
+        var instance = activator.CreateInstance(typeof(RawComponent));
 
-    //     Assert.IsType<RawComponent>(instance);
-    //     Assert.Empty(sink.Events);
-    // }
+        Assert.IsType<RawComponent>(instance);
+        Assert.Empty(sink.Events);
+    }
 
     private static DevToolsBridge CreateBridge()
     {

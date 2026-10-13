@@ -33,13 +33,13 @@ public sealed class InstrumentationFactoryTests
         // Arrange
         var eventSink = Substitute.For<IEventSink>();
         var factory = new InstrumentationFactory(eventSink, NullLogger<InstrumentationFactory>.Instance);
-        var component = new TestComponent();
+        var componentType = typeof(TestComponent);
 
         // Act
-        var wrappedComponentType = factory.Wrap(typeof(TestComponent));
+        var wrappedComponentType = factory.Wrap(componentType);
 
         // Assert
-        Assert.NotSame(component, wrappedComponentType);
+        Assert.NotSame(componentType, wrappedComponentType);
     }
 
     [Fact]

@@ -16,7 +16,7 @@ public class InstrumentationFactory(IEventSink eventSink, ILogger<Instrumentatio
 
     private ModuleBuilder? _moduleBuilder;
 
-    private Dictionary<Type, Type> _wrappedTypes = new Dictionary<Type, Type>();
+    private readonly Dictionary<Type, Type> _wrappedTypes = new Dictionary<Type, Type>();
 
     /// <summary>
     /// Wraps <paramref name="componentType"/> with an instrumented layer, using the original type as the base class so that all properties and methods are still available.
@@ -59,22 +59,9 @@ public class InstrumentationFactory(IEventSink eventSink, ILogger<Instrumentatio
             return typeToWrap;
         }
 
-        void LogPropertySet(string name, object? value)
-        {
-            var e = EventFactory.Generic("PropertySet", new Dictionary<string, object?>
-            {
-                { "Property", name},
-                { "Value", value}
-            });
-            _eventSink.Publish(e);
-        }
-        MethodInfo? miPropertySet = typeof(InstrumentationFactory).GetMethod(nameof(LogPropertySet), BindingFlags.NonPublic | BindingFlags.Instance);
-
         WrapPublicVirtualMethods(typeToWrap, typeBuilder);
 
         WrapBuildRenderTree(typeToWrap, typeBuilder);
-
-        // TODO: Events?
 
         Type generated = typeBuilder.CreateType();
         _wrappedTypes[typeToWrap] = generated;

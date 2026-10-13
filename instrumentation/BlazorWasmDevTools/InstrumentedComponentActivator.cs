@@ -31,8 +31,6 @@ public class InstrumentedComponentActivator(IServiceProvider serviceProvider,
         return true;
     });
 
-    private readonly object _lock = new();
-
     public IComponent CreateInstance([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type componentType)
     {
         var instance = ActivatorUtilities.CreateInstance(_serviceProvider, componentType) as IComponent
