@@ -1,7 +1,4 @@
-import type {
-  ComponentLifecycleEvent,
-  PageState,
-} from "../types/lifecycle";
+import type { ComponentLifecycleEvent, PageState } from "../types/lifecycle";
 
 const BLAZOR_WASM_DEVTOOLS_PANEL_EVENT = "__blazor_wasm_devtools_panel__";
 
@@ -10,17 +7,23 @@ function evalInPage<T>(
 ): Promise<{ result: T | null; error: unknown }> {
   return new Promise((resolve) => {
     if (typeof chrome === "undefined" || !chrome.devtools?.inspectedWindow) {
-      resolve({ result: null, error: new Error("chrome.devtools unavailable") });
+      resolve({
+        result: null,
+        error: new Error("chrome.devtools unavailable"),
+      });
       return;
     }
 
-    chrome.devtools.inspectedWindow.eval(expression, (result, exceptionInfo) => {
-      if (exceptionInfo) {
-        resolve({ result: null, error: exceptionInfo });
-        return;
-      }
-      resolve({ result: result as T, error: null });
-    });
+    chrome.devtools.inspectedWindow.eval(
+      expression,
+      (result, exceptionInfo) => {
+        if (exceptionInfo) {
+          resolve({ result: null, error: exceptionInfo });
+          return;
+        }
+        resolve({ result: result as T, error: null });
+      },
+    );
   });
 }
 
@@ -38,7 +41,6 @@ export async function queryPageState(): Promise<PageState> {
       return JSON.stringify({
         hasHook: !!hook,
         isActive: !!(hook && hook.isActive),
-        isDormant: hook ? hook.isDormant : null,
         hasBlazor: typeof Blazor !== "undefined",
         lifecycleEventCount: (function () {
           var hook = window.__BLAZOR_WASM_DEVTOOLS_GLOBAL_HOOK__;

@@ -104,8 +104,11 @@ export function App({
                     {formatTime(event.timestampUnixMilliseconds)}
                   </span>{" "}
                   <span className="text-[#9cdcfe]">#{event.componentId}</span>{" "}
+                  <span className="text-[#87ceeb]">
+                    p{event.parentComponentId ?? "-"}
+                  </span>{" "}
                   <span className="text-[#ce9178]">{event.componentType}</span>{" "}
-                  <span className="text-[#dcdcaa]">{event.phase}</span>
+                  <span className="text-[#dcdcaa]">{event.phase}</span>{" "}
                   {event.firstRender ? (
                     <span className="text-[#4ec9b0]"> first</span>
                   ) : null}

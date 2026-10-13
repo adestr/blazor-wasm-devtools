@@ -20,7 +20,6 @@ export type ComponentLifecycleEvent = {
 export type PageState = {
   hasHook: boolean;
   isActive: boolean;
-  isDormant: boolean | null;
   hasBlazor: boolean;
   lifecycleEventCount: number;
   rendererCount: number;
