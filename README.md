@@ -8,7 +8,7 @@ These tools work on the same principle as many other UI framework developer tool
 |------|---------|------|
 | `inject.js` | Inspected page (`MAIN`, `document_start`) | Defines `window.__BLAZOR_WASM_DEVTOOLS_GLOBAL_HOOK__` before Blazor loads |
 | `page-bridge.js` (built from `ui/`) | DevTools extension pages | `eval` + `CustomEvent` to talk to the hook in the page |
-| `panel/` (built from `ui/`) | Custom DevTools panel UI | React panel; activate hook and stream lifecycle events |
+| `panel/` (built from `ui/`) | Custom DevTools panel UI | React panel; activate the hook, stream lifecycle events, and show the component hierarchy in a Components tab |
 
 Build the panel before loading the extension:
 

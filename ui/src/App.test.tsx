@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import type { ComponentLifecycleEvent, PageState } from "./types/lifecycle";
@@ -86,5 +86,44 @@ describe("App", () => {
     );
 
     expect(onInitialize).toHaveBeenCalledOnce();
+  });
+
+  it("shows a child nested under its parent in the Components tab without events", () => {
+    const components = new Map([
+      [
+        1,
+        {
+          componentId: 1,
+          componentType: "App",
+          parentComponentId: null,
+          phase: "afterRender" as const,
+          timestampUnixMilliseconds: 0,
+        },
+      ],
+      [
+        2,
+        {
+          componentId: 2,
+          componentType: "Counter",
+          parentComponentId: 1,
+          phase: "parametersSet" as const,
+          timestampUnixMilliseconds: 1,
+        },
+      ],
+    ]);
+
+    renderApp({
+      events: [],
+      components,
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Components" }));
+
+    const panel = screen.getByRole("tabpanel", { name: "Components" });
+    const appItem = within(panel).getByText("App", { exact: true }).closest("li");
+    expect(appItem).not.toBeNull();
+    expect(
+      within(appItem as HTMLElement).getByText("Counter", { exact: true }),
+    ).toBeTruthy();
   });
 });
