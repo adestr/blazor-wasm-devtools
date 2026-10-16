@@ -227,6 +227,7 @@ human-landing-approval:
 
 land:
 	Open or update the pull request. Include `Closes #[id]` in the body, where `[id]` is the issue number the human named.
+	If this step opened the pull request, run `sleep 5` before checking for review requests, so an automatic request has time to appear.
 	Apply `all-bots-triaged` to that pull request. Do not merge while it is unsatisfied.
 	Then merge the pull request into `main` using the path the human approved.
 	Satisfied when: the commit from `commit` is contained in `main`, or the pull request into `main` has been merged by squash or rebase, and every bot comment that was present before the merge was fixed or deferred.
