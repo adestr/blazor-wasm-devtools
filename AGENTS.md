@@ -224,7 +224,7 @@ human-landing-approval:
 
 land:
 	Open or update the pull request, then merge it into `main` using the path the human approved.
-	Satisfied when: the commit from `commit` is contained in `main`.
+	Satisfied when: the commit from `commit` is contained in `main`, or the pull request into `main` has been merged by squash or rebase.
 
 codified-scars-consolidated:
 	This step records a new failure mode from the work just finished. It does not introduce a scar practice into a repository that has none.
