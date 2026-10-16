@@ -9,6 +9,7 @@ pnpm install
 pnpm dev      # local UI only (no chrome.devtools APIs)
 pnpm build    # page-bridge.js + panel/ for the extension
 pnpm lint     # TypeScript check
+pnpm test     # Vitest
 ```
 
 From the repository root:
