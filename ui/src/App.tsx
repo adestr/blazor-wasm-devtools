@@ -71,6 +71,10 @@ export function App({
   const status = formatStatus(pageState, pageError);
   const [tab, setTab] = useState<"lifecycle" | "components">("lifecycle");
   const tree = buildComponentTree(components);
+  const tabClassName = (selected: boolean) =>
+    `rounded border bg-[#2d2d2d] px-2 py-1 hover:bg-[#3a3a3a] ${
+      selected ? "border-[#9cdcfe] text-[#9cdcfe]" : "border-[#555]"
+    }`;
 
   return (
     <div className="flex h-full min-h-screen flex-col gap-3 p-3 text-[12px] text-[#e8e8e8]">
@@ -105,7 +109,7 @@ export function App({
           type="button"
           role="tab"
           aria-selected={tab === "lifecycle"}
-          className="rounded border border-[#555] bg-[#2d2d2d] px-2 py-1 hover:bg-[#3a3a3a]"
+          className={tabClassName(tab === "lifecycle")}
           onClick={() => setTab("lifecycle")}
         >
           Lifecycle stream
@@ -114,7 +118,7 @@ export function App({
           type="button"
           role="tab"
           aria-selected={tab === "components"}
-          className="rounded border border-[#555] bg-[#2d2d2d] px-2 py-1 hover:bg-[#3a3a3a]"
+          className={tabClassName(tab === "components")}
           onClick={() => setTab("components")}
         >
           Components
@@ -130,7 +134,11 @@ export function App({
           <ComponentTree nodes={tree} />
         </div>
       ) : (
-        <section className="flex min-h-0 flex-1 flex-col gap-2">
+        <section
+          role="tabpanel"
+          aria-label="Lifecycle stream"
+          className="flex min-h-0 flex-1 flex-col gap-2"
+        >
         <ol className="min-h-0 flex-1 space-y-1 overflow-y-auto rounded border border-[#333] bg-[#252526] p-2 font-mono text-[11px]">
           {events.length === 0 ? (
             <li className="text-[#888]">

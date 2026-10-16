@@ -88,6 +88,28 @@ describe("App", () => {
     expect(onInitialize).toHaveBeenCalledOnce();
   });
 
+  it("marks the lifecycle stream as the selected tab panel", () => {
+    renderApp();
+
+    expect(
+      screen.getByRole("tabpanel", { name: "Lifecycle stream" }),
+    ).toBeTruthy();
+
+    const lifecycleTab = screen.getByRole("tab", { name: "Lifecycle stream" });
+    const componentsTab = screen.getByRole("tab", { name: "Components" });
+    expect(lifecycleTab.className).toContain("border-[#9cdcfe]");
+    expect(lifecycleTab.className).toContain("text-[#9cdcfe]");
+    expect(componentsTab.className).not.toContain("border-[#9cdcfe]");
+    expect(componentsTab.className).not.toContain("text-[#9cdcfe]");
+
+    fireEvent.click(componentsTab);
+
+    expect(componentsTab.className).toContain("border-[#9cdcfe]");
+    expect(componentsTab.className).toContain("text-[#9cdcfe]");
+    expect(lifecycleTab.className).not.toContain("border-[#9cdcfe]");
+    expect(lifecycleTab.className).not.toContain("text-[#9cdcfe]");
+  });
+
   it("shows a child nested under its parent in the Components tab without events", () => {
     const components = new Map([
       [
