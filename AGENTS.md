@@ -242,9 +242,12 @@ codified-scars-consolidated:
 
 pristine-workbench:
 	Run `git checkout main` and `git pull`.
-	Delete a local branch only when `git branch --merged main` lists it and the branch is not `main` and not the branch you have checked out.
-	Use `git branch -d`. Do not use `git branch -D`.
-	Satisfied when: `main` is checked out, it matches its remote, and every deleted branch was merged into `main`.
+	For every local branch other than `main`, run `git checkout --detach <branch>` and `git rebase main`.
+	If the rebase fails, run `git rebase --abort` and keep the branch.
+	If the rebase succeeds and `git merge-base --is-ancestor HEAD main` succeeds, run `git checkout main` and delete that branch with `git branch -D <branch>`.
+	If `HEAD` is ahead of `main`, run `git checkout main` and leave the branch ref as it was.
+	Never delete `main`.
+	Satisfied when: `main` is checked out, it matches its remote, and every deleted branch was proven by that rebase to contain no commits outside `main`.
 
 finish:
 	Satisfied when: `pristine-workbench` is satisfied. Do nothing else.
