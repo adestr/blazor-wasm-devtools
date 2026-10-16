@@ -43,20 +43,44 @@ type Props = {
   onInitialize: () => void;
 };
 
-function ComponentTree({ nodes }: { nodes: ComponentTreeNode[] }) {
+function ComponentTree({
+  nodes,
+  nested = false,
+}: {
+  nodes: ComponentTreeNode[];
+  nested?: boolean;
+}) {
   if (nodes.length === 0) {
     return null;
   }
 
   return (
-    <ol className="space-y-1">
+    <ol className={`space-y-1${nested ? " pl-4" : ""}`}>
       {nodes.map((node) => (
-        <li key={node.componentId}>
-          <span>{node.componentType}</span>
-          <ComponentTree nodes={node.children} />
-        </li>
+        <ComponentTreeRow key={node.componentId} node={node} />
       ))}
     </ol>
+  );
+}
+
+function ComponentTreeRow({ node }: { node: ComponentTreeNode }) {
+  const [expanded, setExpanded] = useState(true);
+  const hasChildren = node.children.length > 0;
+
+  return (
+    <li>
+      {hasChildren ? (
+        <>
+          <button type="button" onClick={() => setExpanded((value) => !value)}>
+            {expanded ? "-" : "+"}
+          </button>{" "}
+        </>
+      ) : null}
+      <span>{node.componentType}</span>
+      {hasChildren && expanded ? (
+        <ComponentTree nodes={node.children} nested />
+      ) : null}
+    </li>
   );
 }
 
