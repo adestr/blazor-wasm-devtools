@@ -93,7 +93,7 @@ approved-plan:
 
 tdd-failing-repro:
 	If the accepted plan changes runtime behavior, add a test that fails because that behavior is missing. Do not edit production code in this step.
-	Run the narrowest existing command that executes that test: `dotnet test` from `instrumentation/` for C# tests, or the UI test command already present in `ui/package.json` for panel tests.
+	Run the narrowest existing command that executes that test: `dotnet test` from `instrumentation/` for C# tests, or `pnpm test` from `ui/` for panel tests.
 	Show the failing assertion.
 	If the accepted plan changes no runtime behavior, add no test. Say "no runtime behavior; no test added".
 	Satisfied when: the new test's failure output is shown, or "no runtime behavior; no test added" is stated.
@@ -192,6 +192,9 @@ all-bots-triaged:
 	For each comment, either fix it or record a one-line reason it is deferred. A fix makes `human-diff-approval` unsatisfied; repeat from that gate.
 	If there is no pull request, or no bot comments, say "no bot comments".
 	Satisfied when: every bot comment is fixed or has a recorded deferral, or "no bot comments" is stated.
+
+ci-quiescent:
+	Satisfied when: `ci-remote-green` and `all-bots-triaged` are satisfied. Do nothing else.
 
 changelog-updated:
 	If a changelog file exists, add an entry for each user-visible change in the approved diff.
