@@ -2,8 +2,8 @@
 
 The workflow is a Makefile-style DAG. The active target is `finish` unless the human names another target from this file.
 
-1. Start at the active target. Choose its leftmost prerequisite that is not satisfied, and repeat until every prerequisite of the current target is satisfied. That target is the only one you may work on this turn.
-2. Run that target's recipe, then stop. Do not start the next target in the same turn.
+1. Start at the active target. Choose its leftmost prerequisite that is not satisfied, and repeat until every prerequisite of the current target is satisfied. Work that target.
+2. Run that target's recipe. When it is satisfied, state `[stage] complete, now starting [next stage]` and continue to the leftmost unsatisfied target in the same turn. Stop only when the next target is a human gate (`human-plan-approval`, `human-diff-approval`, `human-review-approval`, `human-commit-approval`, `human-push-approval`, `human-landing-approval`), or when the stage just finished makes an earlier gate unsatisfied. `triaged-blockers` and `all-bots-triaged` name that backward move. On a human gate, ask for the approval that gate's **Satisfied when** line requires: acceptance of the plan, approval of the diff, approval of the review report, permission to create the commit, permission to push, or approval to land onto `main`. Do not treat "Continue" as that approval.
 3. A target is satisfied only when its **Satisfied when** condition is true.
 4. A human gate is satisfied only when the human's latest message explicitly approves the artifact that gate presented. Approval of a different gate does not count. If the human asks for a change, that gate is unsatisfied and the target that produced the artifact is unsatisfied too.
 5. Do not add a target, skip a target, or choose a different unsatisfied prerequisite than the leftmost one.
@@ -93,7 +93,7 @@ researched-ticket:
 
 human-plan-approval:
 	Present the plan that follows from the research note. Include the files to change, the behavior change, the test that will prove it, and the work you will not do.
-	Stop.
+	Stop and ask the human to accept this plan.
 	Satisfied when: the human's latest message explicitly accepts that plan.
 
 approved-plan:
@@ -117,7 +117,7 @@ implementation-diff:
 
 human-diff-approval:
 	Present `git diff` and a short summary of what changed.
-	Stop.
+	Stop and ask the human to approve this diff.
 	Satisfied when: the human's latest message explicitly approves that diff.
 	Any later edit to the diff makes this gate unsatisfied.
 
@@ -149,7 +149,7 @@ triaged-blockers:
 
 human-review-approval:
 	Present the adversarial report and the triage result.
-	Stop.
+	Stop and ask the human to approve this report.
 	Satisfied when: the human's latest message explicitly approves that report.
 
 approved-adversarial-report:
@@ -176,7 +176,7 @@ pre-commit-clean:
 
 human-commit-approval:
 	Show `git status` and the proposed commit message. The message states why the change was made.
-	Stop.
+	Stop and ask the human for permission to create the commit.
 	Satisfied when: the human's latest message explicitly tells you to create the commit.
 
 commit:
@@ -185,7 +185,7 @@ commit:
 
 human-push-approval:
 	State the remote and branch you will push.
-	Stop.
+	Stop and ask the human for permission to push.
 	Satisfied when: the human's latest message explicitly tells you to push.
 
 push:
@@ -219,7 +219,7 @@ ready-to-land:
 
 human-landing-approval:
 	Present the landing statement from `ready-to-land`.
-	Stop.
+	Stop and ask the human to approve landing onto `main`.
 	Satisfied when: the human's latest message explicitly approves landing onto `main`.
 
 land:
