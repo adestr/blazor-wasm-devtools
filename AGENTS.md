@@ -2,8 +2,10 @@
 
 The workflow is a Makefile-style DAG. The active target is `finish` unless the human names another target from this file.
 
-1. Start at the active target. Choose its leftmost prerequisite that is not satisfied, and repeat until every prerequisite of the current target is satisfied. Work that target.
-2. Run that target's recipe. When it is satisfied, write the name of the current target in inline code, then ' → ', then the name of the leftmost unsatisfied target, and continue to that leftmost unsatisfied target in the same turn. Stop only when the next target is a human gate (`human-plan-approval`, `human-diff-approval`, `human-review-approval`, `human-commit-approval`, `human-push-approval`, `human-landing-approval`), or when the stage just finished makes an earlier gate unsatisfied. `triaged-blockers` and `all-bots-triaged` name that backward move. On a human gate, ask for the approval that gate's **Satisfied when** line requires: acceptance of the plan, approval of the diff, approval of the review report, permission to create the commit, permission to push, or approval to land onto `main`. Do not treat "Continue" as that approval.
+1. Start at the active target. Choose its leftmost prerequisite that is not satisfied, and repeat until every prerequisite of the current target is satisfied. Work on that target.
+2. Run that target's recipe. When it is satisfied, write the name of the current target in inline code, then ' → ', then the name of the leftmost unsatisfied target, and continue to that leftmost unsatisfied target in the same turn.
+   - Stop only when the next target is named `human-*-approval`, or when the stage just finished makes an earlier gate unsatisfied. `triaged-blockers` and `all-bots-triaged` name that backward move.
+   - On a human gate, ask for the approval that gate's **Satisfied when** line requires. Do not treat "Continue" as that approval.
 3. A target is satisfied only when its **Satisfied when** condition is true.
 4. A human gate is satisfied only when the human's latest message explicitly approves the artifact that gate presented. Approval of a different gate does not count. If the human asks for a change, that gate is unsatisfied and the target that produced the artifact is unsatisfied too.
 5. Do not add a target, skip a target, or choose a different unsatisfied prerequisite than the leftmost one.
@@ -149,8 +151,8 @@ triaged-blockers:
 
 human-review-approval:
 	Present the adversarial report and the triage result.
-	Stop and ask the human to approve this report.
-	Satisfied when: the human's latest message explicitly approves that report.
+	Stop and ask the human to approve the adversarial report and the triage result.
+	Satisfied when: the human's latest message explicitly approves the adversarial report and the triage result.
 
 approved-adversarial-report:
 	Restate the approved report and the disposition of each blocker.
