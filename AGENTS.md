@@ -8,7 +8,7 @@ The workflow is a Makefile-style DAG. The active target is `finish` unless the h
 4. A human gate is satisfied only when the human's latest message explicitly approves the artifact that gate presented. Approval of a different gate does not count. If the human asks for a change, that gate is unsatisfied and the target that produced the artifact is unsatisfied too.
 5. Do not add a target, skip a target, or choose a different unsatisfied prerequisite than the leftmost one.
 6. Lines under a target are instructions. A line in backticks is a command.
-7. Do not commit, push, merge, check out another branch, or delete branches except where `commit`, `push`, `land`, or `pristine-workbench` says to.
+7. Do not commit, push, merge, check out another branch, or delete branches except where `branch-created`, `commit`, `push`, `land`, or `pristine-workbench` says to.
 8. If a recipe says a scar ledger, changelog, CI workflow, or review bot is absent, record that and finish the step. Do not create that system in order to satisfy the step.
 
 Coding practice is enforced by `tdd-failing-repro`, `implementation-diff`, `adversarial-review`, and `clean-static-analysis`.
@@ -23,7 +23,7 @@ Coding practice is enforced by `tdd-failing-repro`, `implementation-diff`, `adve
 	clean-static-analysis doc-audit-complete human-review-approval \
 	triaged-blockers adversarial-review human-diff-approval \
 	implementation-diff tdd-failing-repro approved-plan human-plan-approval \
-	researched-ticket candidate-scars git-archaeology ticket-assigned
+	researched-ticket branch-created candidate-scars git-archaeology ticket-assigned
 
 finish: pristine-workbench
 pristine-workbench: codified-scars-consolidated
@@ -48,9 +48,10 @@ implementation-diff: tdd-failing-repro
 tdd-failing-repro: approved-plan
 approved-plan: human-plan-approval
 human-plan-approval: researched-ticket
-researched-ticket: ticket-assigned candidate-scars git-archaeology
-candidate-scars: ticket-assigned
-git-archaeology: ticket-assigned
+researched-ticket: branch-created candidate-scars git-archaeology
+branch-created: ticket-assigned
+candidate-scars: branch-created
+git-archaeology: branch-created
 clean-static-analysis: human-diff-approval
 doc-audit-complete: human-diff-approval
 changelog-updated: human-diff-approval
@@ -64,6 +65,15 @@ ticket-assigned:
 	Restate the human's requested outcome in one sentence, including what will be different when the work is done.
 	The human's message is the ticket when it names that outcome. Do not invent a tracker id.
 	Satisfied when: that sentence is stated and it matches the human's request.
+
+branch-created:
+	Name the working branch `[prefix]/[issue number]-[terse kebab-case issue summary]`.
+	Use the prefix `fix` when the issue is labelled `bug`, and `feat` otherwise.
+	Take the issue number, title, and labels from the issue the human named. Do not invent an issue number.
+	If the current branch already has that name, stop.
+	If that branch exists, check it out.
+	Otherwise check out `main`, run `git pull`, and create the branch from `main`.
+	Satisfied when: `git branch --show-current` prints that name.
 
 candidate-scars:
 	Search the repository for a scar ledger: a file that records entries in the form WOUND, TRAP, REFLEX.
