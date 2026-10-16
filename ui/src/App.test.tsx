@@ -1,0 +1,90 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { App } from "./App";
+import type { ComponentLifecycleEvent, PageState } from "./types/lifecycle";
+
+const pageState: PageState = {
+  hasHook: true,
+  isActive: true,
+  hasBlazor: true,
+  lifecycleEventCount: 2,
+  rendererCount: 1,
+};
+
+const events: ComponentLifecycleEvent[] = [
+  {
+    sequence: 1,
+    componentId: 1,
+    componentType: "App",
+    parentComponentId: null,
+    phase: "afterRender",
+    firstRender: true,
+    source: "instrumentation",
+    timestampUnixMilliseconds: Date.parse("2026-10-16T09:00:00Z"),
+  },
+  {
+    sequence: 2,
+    componentId: 2,
+    componentType: "Counter",
+    parentComponentId: 1,
+    phase: "parametersSet",
+    firstRender: false,
+    source: "instrumentation",
+    timestampUnixMilliseconds: Date.parse("2026-10-16T09:00:01Z"),
+  },
+];
+
+function renderApp(overrides: Partial<Parameters<typeof App>[0]> = {}) {
+  const onInitialize = vi.fn();
+  render(
+    <App
+      pageState={pageState}
+      pageError={null}
+      events={[]}
+      initializing={false}
+      onInitialize={onInitialize}
+      {...overrides}
+    />,
+  );
+  return { onInitialize };
+}
+
+describe("App", () => {
+  it("shows the empty lifecycle stream", () => {
+    renderApp();
+
+    expect(screen.getByText(/No lifecycle events yet/)).toBeTruthy();
+  });
+
+  it("lists lifecycle events newest first with parent ids", () => {
+    renderApp({ events });
+
+    const items = screen.getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]?.textContent).toContain("#2");
+    expect(items[0]?.textContent).toContain("p1");
+    expect(items[0]?.textContent).toContain("Counter");
+    expect(items[0]?.textContent).toContain("parametersSet");
+    expect(items[1]?.textContent).toContain("#1");
+    expect(items[1]?.textContent).toContain("p-");
+    expect(items[1]?.textContent).toContain("App");
+    expect(items[1]?.textContent).toContain("first");
+  });
+
+  it("shows a page error in place of the status summary", () => {
+    renderApp({ pageError: "Could not read the inspected page" });
+
+    expect(screen.getByText("Could not read the inspected page")).toBeTruthy();
+    expect(screen.queryByText(/Blazor detected/)).toBeNull();
+  });
+
+  it("calls onInitialize from the initialize button", () => {
+    const { onInitialize } = renderApp();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Initialize DevTools" }),
+    );
+
+    expect(onInitialize).toHaveBeenCalledOnce();
+  });
+});
