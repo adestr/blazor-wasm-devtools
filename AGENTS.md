@@ -198,10 +198,11 @@ ci-remote-green:
 	Satisfied when: every required check has succeeded, or "no remote CI checks" is stated.
 
 all-bots-triaged:
+	If a pull request exists and a bot review has been requested but not submitted, wait until that review is submitted. Do not say "no bot comments" while that request is outstanding.
 	If a pull request exists, read each review comment left by a bot.
 	For each comment, either fix it or record a one-line reason it is deferred. A fix makes `human-diff-approval` unsatisfied; repeat from that gate.
 	If there is no pull request, or no bot comments, say "no bot comments".
-	Satisfied when: every bot comment is fixed or has a recorded deferral, or "no bot comments" is stated.
+	Satisfied when: no requested bot review is still outstanding, and every bot comment is fixed or has a recorded deferral, or "no bot comments" is stated.
 
 ci-quiescent:
 	Satisfied when: `ci-remote-green` and `all-bots-triaged` are satisfied. Do nothing else.
@@ -223,8 +224,10 @@ human-landing-approval:
 	Satisfied when: the human's latest message explicitly approves landing onto `main`.
 
 land:
-	Open or update the pull request, then merge it into `main` using the path the human approved.
-	Satisfied when: the commit from `commit` is contained in `main`, or the pull request into `main` has been merged by squash or rebase.
+	Open or update the pull request.
+	Apply `all-bots-triaged` to that pull request. Do not merge while it is unsatisfied.
+	Then merge the pull request into `main` using the path the human approved.
+	Satisfied when: the commit from `commit` is contained in `main`, or the pull request into `main` has been merged by squash or rebase, and every bot comment that was present before the merge was fixed or deferred.
 
 codified-scars-consolidated:
 	This step records a new failure mode from the work just finished. It does not introduce a scar practice into a repository that has none.
