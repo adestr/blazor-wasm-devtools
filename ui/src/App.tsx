@@ -1,3 +1,9 @@
+import { useState } from "react";
+import {
+  buildComponentTree,
+  type ComponentRecord,
+  type ComponentTreeNode,
+} from "./hierarchy";
 import type { ComponentLifecycleEvent, PageState } from "./types/lifecycle";
 
 function formatStatus(pageState: PageState | null, pageError: string | null) {
@@ -32,18 +38,39 @@ type Props = {
   pageState: PageState | null;
   pageError: string | null;
   events: ComponentLifecycleEvent[];
+  components?: ReadonlyMap<number, ComponentRecord>;
   initializing: boolean;
   onInitialize: () => void;
 };
+
+function ComponentTree({ nodes }: { nodes: ComponentTreeNode[] }) {
+  if (nodes.length === 0) {
+    return null;
+  }
+
+  return (
+    <ol className="space-y-1">
+      {nodes.map((node) => (
+        <li key={node.componentId}>
+          <span>{node.componentType}</span>
+          <ComponentTree nodes={node.children} />
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 export function App({
   pageState,
   pageError,
   events,
+  components = new Map(),
   initializing,
   onInitialize,
 }: Props) {
   const status = formatStatus(pageState, pageError);
+  const [tab, setTab] = useState<"lifecycle" | "components">("lifecycle");
+  const tree = buildComponentTree(components);
 
   return (
     <div className="flex h-full min-h-screen flex-col gap-3 p-3 text-[12px] text-[#e8e8e8]">
@@ -73,10 +100,37 @@ export function App({
         </p>
       </header>
 
-      <section className="flex min-h-0 flex-1 flex-col gap-2">
-        <h2 className="text-[11px] font-medium uppercase tracking-wide text-[#9a9a9a]">
+      <div role="tablist" className="flex gap-2">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "lifecycle"}
+          className="rounded border border-[#555] bg-[#2d2d2d] px-2 py-1 hover:bg-[#3a3a3a]"
+          onClick={() => setTab("lifecycle")}
+        >
           Lifecycle stream
-        </h2>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "components"}
+          className="rounded border border-[#555] bg-[#2d2d2d] px-2 py-1 hover:bg-[#3a3a3a]"
+          onClick={() => setTab("components")}
+        >
+          Components
+        </button>
+      </div>
+
+      {tab === "components" ? (
+        <div
+          role="tabpanel"
+          aria-label="Components"
+          className="min-h-0 flex-1 overflow-y-auto rounded border border-[#333] bg-[#252526] p-2 font-mono text-[11px]"
+        >
+          <ComponentTree nodes={tree} />
+        </div>
+      ) : (
+        <section className="flex min-h-0 flex-1 flex-col gap-2">
         <ol className="min-h-0 flex-1 space-y-1 overflow-y-auto rounded border border-[#333] bg-[#252526] p-2 font-mono text-[11px]">
           {events.length === 0 ? (
             <li className="text-[#888]">
@@ -117,7 +171,8 @@ export function App({
               ))
           )}
         </ol>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

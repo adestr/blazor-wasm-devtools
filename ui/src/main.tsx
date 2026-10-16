@@ -11,6 +11,7 @@ function PanelRoot() {
       pageState={panel.pageState}
       pageError={panel.pageError}
       events={panel.events}
+      components={panel.components}
       initializing={panel.initializing}
       onInitialize={() => {
         void panel.initialize();

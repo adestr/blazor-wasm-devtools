@@ -4,6 +4,10 @@ import {
   queryPageState,
   subscribeLifecycleEvents,
 } from "../bridge/page-bridge";
+import {
+  applyLifecycleEvents,
+  type ComponentRecord,
+} from "../hierarchy";
 import type { ComponentLifecycleEvent, PageState } from "../types/lifecycle";
 
 const MAX_EVENTS = 200;
@@ -12,6 +16,9 @@ export function useDevToolsPanel() {
   const [pageState, setPageState] = useState<PageState | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
   const [events, setEvents] = useState<ComponentLifecycleEvent[]>([]);
+  const [components, setComponents] = useState<Map<number, ComponentRecord>>(
+    () => new Map(),
+  );
   const [initializing, setInitializing] = useState(false);
 
   const refreshState = useCallback(async () => {
@@ -39,6 +46,7 @@ export function useDevToolsPanel() {
 
   useEffect(() => {
     const unsubscribe = subscribeLifecycleEvents((incoming) => {
+      setComponents((current) => applyLifecycleEvents(current, incoming));
       setEvents((current) => {
         const merged = [...current, ...incoming];
         return merged.length > MAX_EVENTS
@@ -55,6 +63,7 @@ export function useDevToolsPanel() {
     pageState,
     pageError,
     events,
+    components,
     initializing,
     initialize,
     refreshState,
