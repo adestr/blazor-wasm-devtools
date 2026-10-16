@@ -34,6 +34,31 @@ const events: ComponentLifecycleEvent[] = [
   },
 ];
 
+function parentAndChild() {
+  return new Map([
+    [
+      1,
+      {
+        componentId: 1,
+        componentType: "App",
+        parentComponentId: null,
+        phase: "afterRender" as const,
+        timestampUnixMilliseconds: 0,
+      },
+    ],
+    [
+      2,
+      {
+        componentId: 2,
+        componentType: "Counter",
+        parentComponentId: 1,
+        phase: "parametersSet" as const,
+        timestampUnixMilliseconds: 1,
+      },
+    ],
+  ]);
+}
+
 function renderApp(overrides: Partial<Parameters<typeof App>[0]> = {}) {
   const onInitialize = vi.fn();
   render(
@@ -111,32 +136,9 @@ describe("App", () => {
   });
 
   it("shows a child nested under its parent in the Components tab without events", () => {
-    const components = new Map([
-      [
-        1,
-        {
-          componentId: 1,
-          componentType: "App",
-          parentComponentId: null,
-          phase: "afterRender" as const,
-          timestampUnixMilliseconds: 0,
-        },
-      ],
-      [
-        2,
-        {
-          componentId: 2,
-          componentType: "Counter",
-          parentComponentId: 1,
-          phase: "parametersSet" as const,
-          timestampUnixMilliseconds: 1,
-        },
-      ],
-    ]);
-
     renderApp({
       events: [],
-      components,
+      components: parentAndChild(),
     });
 
     fireEvent.click(screen.getByRole("tab", { name: "Components" }));
@@ -147,5 +149,33 @@ describe("App", () => {
     expect(
       within(appItem as HTMLElement).getByText("Counter", { exact: true }),
     ).toBeTruthy();
+  });
+
+  it("indents a nested list and toggles that row from the indicator", () => {
+    renderApp({
+      events: [],
+      components: parentAndChild(),
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Components" }));
+
+    const panel = screen.getByRole("tabpanel", { name: "Components" });
+    const appItem = within(panel)
+      .getByText("App", { exact: true })
+      .closest("li") as HTMLElement;
+    const rootList = appItem.parentElement as HTMLElement;
+    const nestedList = within(appItem).getByRole("list");
+    expect(rootList.className).not.toContain("pl-4");
+    expect(nestedList.className).toContain("pl-4");
+    const counterItem = within(panel)
+      .getByText("Counter", { exact: true })
+      .closest("li") as HTMLElement;
+    expect(within(counterItem).queryByRole("button")).toBeNull();
+
+    fireEvent.click(within(appItem).getByRole("button", { name: "-" }));
+    expect(within(panel).queryByText("Counter", { exact: true })).toBeNull();
+
+    fireEvent.click(within(appItem).getByRole("button", { name: "+" }));
+    expect(within(panel).getByText("Counter", { exact: true })).toBeTruthy();
   });
 });
